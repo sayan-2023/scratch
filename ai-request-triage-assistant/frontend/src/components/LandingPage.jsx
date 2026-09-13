@@ -56,6 +56,9 @@ import CodeIcon from '@mui/icons-material/Code';
 
 import ThemeToggle from './ThemeToggle';
 import ScrollReveal from './ScrollReveal';
+import AnimatedRobotCompanion from './AnimatedRobotCompanion';
+import MultimodalRagChatModal from './MultimodalRagChatModal';
+import InteractiveAppExplainer from './InteractiveAppExplainer';
 import { useColorMode } from '../ThemeContext';
 
 const WEBHOOK_PRESETS = [
@@ -287,10 +290,32 @@ export default function LandingPage({
   onOpenAuthModal,
   currentUser,
   onLogout,
+  onOpenRagChat,
+  isRagChatOpen,
+  onCloseRagChat,
+  apiKey = '',
 }) {
   const { isDark } = useColorMode();
   const [activeDemoTab, setActiveDemoTab] = useState('technical');
   const [aiStudioOpen, setAiStudioOpen] = useState(false);
+  const [internalRagChatOpen, setInternalRagChatOpen] = useState(false);
+  const ragChatOpen = isRagChatOpen !== undefined ? isRagChatOpen : internalRagChatOpen;
+
+  const handleOpenRagChat = () => {
+    if (onOpenRagChat) {
+      onOpenRagChat();
+    } else {
+      setInternalRagChatOpen(true);
+    }
+  };
+
+  const handleCloseRagChat = () => {
+    if (onCloseRagChat) {
+      onCloseRagChat();
+    } else {
+      setInternalRagChatOpen(false);
+    }
+  };
   const [selectedPreset, setSelectedPreset] = useState('outage');
   const [studioText, setStudioText] = useState(STUDIO_PRESETS[0].text);
   const [studioLoading, setStudioLoading] = useState(false);
@@ -893,45 +918,6 @@ export default function LandingPage({
           </Toolbar>
         </Container>
       </AppBar>
-
-      {/* Floating Back to Top Button */}
-      {showBackToTop && (
-        <Box
-          sx={{
-            position: 'fixed',
-            bottom: 28,
-            right: 28,
-            zIndex: 1500,
-            animation: 'fadeInUp 0.3s ease-out',
-            '@keyframes fadeInUp': {
-              from: { opacity: 0, transform: 'translateY(16px)' },
-              to: { opacity: 1, transform: 'translateY(0)' },
-            },
-          }}
-        >
-          <Tooltip title="Back to top" arrow placement="left">
-            <IconButton
-              onClick={scrollToTop}
-              sx={{
-                background: isDark
-                  ? 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)'
-                  : 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
-                color: '#ffffff',
-                boxShadow: '0 8px 24px rgba(37, 99, 235, 0.4)',
-                width: 46,
-                height: 46,
-                transition: 'all 0.25s ease',
-                '&:hover': {
-                  transform: 'translateY(-3px)',
-                  boxShadow: '0 12px 30px rgba(124, 58, 237, 0.55)',
-                },
-              }}
-            >
-              <KeyboardArrowUpIcon />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      )}
 
       {/* HERO SECTION */}
       <Box
@@ -2489,6 +2475,255 @@ export default function LandingPage({
         </Container>
       </Box>
 
+      {/* MEET NOVA: MULTIMODAL RAG AI ASSISTANT SHOWCASE */}
+      <Box
+        id="multimodal-rag-bot"
+        sx={{
+          py: { xs: 8, md: 12 },
+          backgroundColor: isDark ? '#070b16' : '#f8fafc',
+          backgroundImage: isDark
+            ? 'radial-gradient(circle at 50% 30%, rgba(139, 92, 246, 0.15), transparent 70%), radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.1), transparent 50%)'
+            : 'radial-gradient(circle at 50% 30%, rgba(243, 232, 255, 0.6), transparent 70%)',
+          borderTop: isDark ? '1px solid rgba(139, 92, 246, 0.25)' : '1px solid #e2e8f0',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        <Container maxWidth="lg">
+          <ScrollReveal direction="up" duration={700}>
+            {/* Header Badge & Title */}
+            <Box sx={{ textAlign: 'center', mb: 6 }}>
+              <Chip
+                icon={<AutoAwesomeIcon sx={{ fontSize: 16, color: '#ec4899' }} />}
+                label="✦ MULTIMODAL RAG COMPANION • POWERED BY GOOGLE GEMINI 2.5 FLASH"
+                sx={{
+                  mb: 2,
+                  px: 1.5,
+                  py: 2.2,
+                  borderRadius: 3,
+                  fontWeight: 800,
+                  fontSize: '0.78rem',
+                  letterSpacing: '0.04em',
+                  background: isDark
+                    ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%)'
+                    : 'linear-gradient(135deg, #f3e8ff 0%, #fce7f3 100%)',
+                  border: isDark ? '1px solid rgba(139, 92, 246, 0.45)' : '1px solid #d8b4fe',
+                  color: isDark ? '#f472b6' : '#be185d',
+                  boxShadow: '0 4px 20px rgba(139, 92, 246, 0.25)',
+                }}
+              />
+              <Typography
+                variant="h3"
+                fontWeight="900"
+                sx={{
+                  color: isDark ? '#f8fafc' : '#0f172a',
+                  letterSpacing: '-0.025em',
+                  mb: 2,
+                  fontSize: { xs: '2rem', md: '2.8rem' },
+                }}
+              >
+                Meet{' '}
+                <Box
+                  component="span"
+                  sx={{
+                    background: 'linear-gradient(135deg, #ec4899 0%, #a855f7 50%, #38bdf8 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                  }}
+                >
+                  Nova
+                </Box>
+                : Your Multimodal AI Triage Companion
+              </Typography>
+              <Typography
+                variant="body1"
+                sx={{
+                  color: isDark ? '#94a3b8' : '#64748b',
+                  maxWidth: 720,
+                  mx: 'auto',
+                  lineHeight: 1.7,
+                  fontSize: '1.05rem',
+                }}
+              >
+                Equipped with multimodal computer vision and grounded in verified enterprise SLA matrices.
+                Drop server error screenshots, audit CloudWatch latency graphs, or inspect webhook contracts with verifiable citations.
+              </Typography>
+            </Box>
+
+            {/* Feature Cards Grid */}
+            <Grid container spacing={3} sx={{ mb: 6 }}>
+              <Grid item xs={12} md={4}>
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 3.5,
+                    height: '100%',
+                    borderRadius: 3.5,
+                    backgroundColor: isDark ? 'rgba(15, 23, 42, 0.8)' : '#ffffff',
+                    border: isDark ? '1px solid rgba(139, 92, 246, 0.25)' : '1px solid #e2e8f0',
+                    boxShadow: isDark ? '0 10px 30px rgba(0, 0, 0, 0.4)' : '0 4px 16px rgba(0, 0, 0, 0.05)',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      transform: 'translateY(-4px)',
+                      borderColor: '#a855f7',
+                      boxShadow: '0 14px 35px rgba(139, 92, 246, 0.3)',
+                    },
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 50,
+                      height: 50,
+                      borderRadius: 2.5,
+                      backgroundColor: isDark ? 'rgba(236, 72, 153, 0.15)' : '#fdf2f8',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      mb: 2,
+                    }}
+                  >
+                    <Typography sx={{ fontSize: '1.8rem' }}>📸</Typography>
+                  </Box>
+                  <Typography variant="h6" fontWeight="800" sx={{ color: isDark ? '#f8fafc' : '#0f172a', mb: 1 }}>
+                    Multimodal Vision Diagnostics
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: isDark ? '#94a3b8' : '#64748b', lineHeight: 1.65 }}>
+                    Drag, upload, or paste (Ctrl+V) screenshots of HTTP 504 Gateway Timeouts, AWS CloudWatch alarms, or Stripe billing disputes. Nova analyzes visual markers against triage policies.
+                  </Typography>
+                </Paper>
+              </Grid>
+
+              <Grid item xs={12} md={4}>
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 3.5,
+                    height: '100%',
+                    borderRadius: 3.5,
+                    backgroundColor: isDark ? 'rgba(15, 23, 42, 0.8)' : '#ffffff',
+                    border: isDark ? '1px solid rgba(139, 92, 246, 0.25)' : '1px solid #e2e8f0',
+                    boxShadow: isDark ? '0 10px 30px rgba(0, 0, 0, 0.4)' : '0 4px 16px rgba(0, 0, 0, 0.05)',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      transform: 'translateY(-4px)',
+                      borderColor: '#a855f7',
+                      boxShadow: '0 14px 35px rgba(139, 92, 246, 0.3)',
+                    },
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 50,
+                      height: 50,
+                      borderRadius: 2.5,
+                      backgroundColor: isDark ? 'rgba(139, 92, 246, 0.15)' : '#f5f3ff',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      mb: 2,
+                    }}
+                  >
+                    <Typography sx={{ fontSize: '1.8rem' }}>📚</Typography>
+                  </Box>
+                  <Typography variant="h6" fontWeight="800" sx={{ color: isDark ? '#f8fafc' : '#0f172a', mb: 1 }}>
+                    Grounded Enterprise RAG
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: isDark ? '#94a3b8' : '#64748b', lineHeight: 1.65 }}>
+                    Zero hallucination. Every response is grounded in our 7 indexed enterprise operational modules (SLA targets, team ownership matrix, webhook specs) with verifiable citations.
+                  </Typography>
+                </Paper>
+              </Grid>
+
+              <Grid item xs={12} md={4}>
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 3.5,
+                    height: '100%',
+                    borderRadius: 3.5,
+                    backgroundColor: isDark ? 'rgba(15, 23, 42, 0.8)' : '#ffffff',
+                    border: isDark ? '1px solid rgba(139, 92, 246, 0.25)' : '1px solid #e2e8f0',
+                    boxShadow: isDark ? '0 10px 30px rgba(0, 0, 0, 0.4)' : '0 4px 16px rgba(0, 0, 0, 0.05)',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      transform: 'translateY(-4px)',
+                      borderColor: '#a855f7',
+                      boxShadow: '0 14px 35px rgba(139, 92, 246, 0.3)',
+                    },
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 50,
+                      height: 50,
+                      borderRadius: 2.5,
+                      backgroundColor: isDark ? 'rgba(56, 189, 248, 0.15)' : '#f0f9ff',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      mb: 2,
+                    }}
+                  >
+                    <Typography sx={{ fontSize: '1.8rem' }}>🔊</Typography>
+                  </Box>
+                  <Typography variant="h6" fontWeight="800" sx={{ color: isDark ? '#f8fafc' : '#0f172a', mb: 1 }}>
+                    Neural Voice & Audio TTS
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: isDark ? '#94a3b8' : '#64748b', lineHeight: 1.65 }}>
+                    Listen to operational triage briefings and troubleshooting steps out loud with real-time browser speech synthesis and animated equalizer visualization.
+                  </Typography>
+                </Paper>
+              </Grid>
+            </Grid>
+
+            {/* IN-PAGE INTERACTIVE APP EXPLAINER RAG CONSOLE */}
+            <Box sx={{ mb: 6 }}>
+              <InteractiveAppExplainer
+                onOpenFullChat={handleOpenRagChat}
+                apiKey={apiKey}
+              />
+            </Box>
+
+            {/* Central Launch CTA */}
+            <Box sx={{ textAlign: 'center' }}>
+              <Button
+                variant="contained"
+                size="large"
+                onClick={handleOpenRagChat}
+                sx={{
+                  px: 4.5,
+                  py: 1.8,
+                  borderRadius: 3,
+                  fontSize: '1.05rem',
+                  fontWeight: 800,
+                  textTransform: 'none',
+                  background: 'linear-gradient(135deg, #ec4899 0%, #8b5cf6 50%, #3b82f6 100%)',
+                  boxShadow: '0 8px 30px rgba(139, 92, 246, 0.5)',
+                  transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                  '&:hover': {
+                    transform: 'translateY(-2px) scale(1.03)',
+                    boxShadow: '0 12px 40px rgba(236, 72, 153, 0.65)',
+                  },
+                }}
+              >
+                🤖 Launch Nova Multimodal Chatbot →
+              </Button>
+              <Typography
+                variant="caption"
+                sx={{
+                  display: 'block',
+                  mt: 1.5,
+                  color: isDark ? '#64748b' : '#94a3b8',
+                  fontSize: '0.78rem',
+                }}
+              >
+                Or click the floating robot companion at the bottom-right of your screen anytime
+              </Typography>
+            </Box>
+          </ScrollReveal>
+        </Container>
+      </Box>
+
       {/* FOOTER CALL TO ACTION */}
       <Box
         sx={{
@@ -3403,6 +3638,22 @@ export default function LandingPage({
           </Grid>
         </DialogContent>
       </Dialog>
+
+      {/* Floating Animated Robot Companion (Nova - Outside Website Guide) */}
+      <AnimatedRobotCompanion
+        onClick={handleOpenRagChat}
+        isOpen={ragChatOpen}
+        mode="website_guide"
+      />
+
+      {/* Multimodal RAG Chat Modal (Outside Website Guide) */}
+      <MultimodalRagChatModal
+        open={ragChatOpen}
+        onClose={handleCloseRagChat}
+        apiKey={apiKey}
+        mode="website_guide"
+      />
     </Box>
   );
 }
+

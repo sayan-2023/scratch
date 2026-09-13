@@ -38,6 +38,13 @@ from app.models import (
     EnhanceTextOutput,
     ToneDraftInput,
     ToneDraftOutput,
+    MultimodalChatRequest,
+    MultimodalChatResponse,
+    KnowledgeBaseDocument,
+)
+from app.rag_service import (
+    run_multimodal_rag_chat,
+    get_knowledge_base_documents,
 )
 from app.mock_data import (
     MOCK_REQUESTS,
@@ -706,8 +713,45 @@ def clear_history_endpoint(user_id: str = "usr-admin-01"):
     return {"status": "cleared", "user_id": user_id}
 
 
+# ==============================================================================
+# Multimodal RAG Chatbot Endpoints
+# ==============================================================================
+
+@app.post("/api/chat/multimodal-rag", response_model=MultimodalChatResponse, tags=["Multimodal RAG Chatbot"])
+def chat_multimodal_rag_endpoint(payload: MultimodalChatRequest):
+    """
+    Submits a multimodal inquiry (text prompt + optional image/document data) to Nova.
+    Retrieves grounded enterprise knowledge modules and synthesizes an authoritative response with citations.
+    """
+    try:
+        response = run_multimodal_rag_chat(
+            message=payload.message,
+            image_data=payload.image_data,
+            file_name=payload.file_name,
+            conversation_history=payload.conversation_history,
+            api_key=payload.api_key,
+            mode=payload.mode,
+        )
+        return response
+    except Exception as err:
+        logger.error(f"Error in multimodal RAG chat endpoint: {err}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Multimodal RAG processing failed: {str(err)}",
+        )
+
+
+@app.get("/api/chat/knowledge-base", response_model=List[KnowledgeBaseDocument], tags=["Multimodal RAG Chatbot"])
+def get_knowledge_base_endpoint():
+    """
+    Returns the indexed enterprise operational knowledge base modules for inspection and transparency.
+    """
+    return get_knowledge_base_documents()
+
+
 
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
+
 

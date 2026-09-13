@@ -18,10 +18,13 @@ import HistorySidebar from './components/HistorySidebar';
 import InboxFeedModal from './components/InboxFeedModal';
 import AuthModal from './components/AuthModal';
 import LandingPage from './components/LandingPage';
+import AnimatedRobotCompanion from './components/AnimatedRobotCompanion';
+import MultimodalRagChatModal from './components/MultimodalRagChatModal';
 import { useColorMode } from './ThemeContext';
 
 export default function App() {
   const { isDark } = useColorMode();
+  const [isRagChatOpen, setIsRagChatOpen] = useState(false);
   // Navigation / View state: 'landing' or 'workspace'
   const [currentUser, setCurrentUser] = useState(() => {
     try {
@@ -538,6 +541,10 @@ export default function App() {
           onOpenAuthModal={() => setIsAuthModalOpen(true)}
           currentUser={currentUser}
           onLogout={handleLogout}
+          onOpenRagChat={() => setIsRagChatOpen(true)}
+          isRagChatOpen={isRagChatOpen}
+          onCloseRagChat={() => setIsRagChatOpen(false)}
+          apiKey={apiKey}
         />
 
         {/* Auth Modal */}
@@ -711,6 +718,22 @@ export default function App() {
           {toast.message}
         </Alert>
       </Snackbar>
+
+      {/* Floating Animated Robot Companion (Nova - Inside Workspace Copilot) */}
+      <AnimatedRobotCompanion
+        onClick={() => setIsRagChatOpen(true)}
+        isOpen={isRagChatOpen}
+        hasApiKey={effectiveHasKey}
+        mode="workspace"
+      />
+
+      {/* Multimodal RAG Chat Modal (Inside Workspace Copilot) */}
+      <MultimodalRagChatModal
+        open={isRagChatOpen}
+        onClose={() => setIsRagChatOpen(false)}
+        apiKey={apiKey}
+        mode="workspace"
+      />
     </Box>
   );
 }

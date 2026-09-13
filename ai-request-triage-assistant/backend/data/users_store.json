@@ -1591,5 +1591,14 @@
     "role": "User",
     "avatar_url": "https://api.dicebear.com/7.x/initials/svg?seed=Congrats User",
     "created_at": "2026-09-13 21:26:57"
+  },
+  {
+    "id": "usr-24d378",
+    "email": "somnathdutta1303@gmail.com",
+    "name": "som",
+    "password_hash": "050aaee730115ee581fcc7cbe3b67ef7d002ba92f50146862f44e12308dc3601",
+    "role": "User",
+    "avatar_url": "https://api.dicebear.com/7.x/initials/svg?seed=som",
+    "created_at": "2026-09-13 21:47:55"
   }
 ]

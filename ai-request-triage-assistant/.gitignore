@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Python Virtual Environments
+venv/
+**/venv/
+.venv/
+**/.venv/
+env/
+**/env/
+
+# Python cache & bytecode
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+**/.pytest_cache/
+
+# Build artifacts & distribution
+dist/
+**/dist/
+build/
+**/build/
+
+# Environment variables & secrets
+.env
+**/.env
+.env.local
+**/.env.local
+
+# IDE & OS files
+.DS_Store
+**/.DS_Store
+Thumbs.db
+.vscode/
+.idea/

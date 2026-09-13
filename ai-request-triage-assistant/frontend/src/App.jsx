@@ -18,8 +18,10 @@ import HistorySidebar from './components/HistorySidebar';
 import InboxFeedModal from './components/InboxFeedModal';
 import AuthModal from './components/AuthModal';
 import LandingPage from './components/LandingPage';
+import { useColorMode } from './ThemeContext';
 
 export default function App() {
+  const { isDark } = useColorMode();
   // Navigation / View state: 'landing' or 'workspace'
   const [currentUser, setCurrentUser] = useState(() => {
     try {
@@ -551,7 +553,19 @@ export default function App() {
 
   // VIEW 2: LIVE WORKSPACE DASHBOARD
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default', pb: 8 }}>
+    <Box
+      sx={{
+        minHeight: '100vh',
+        backgroundColor: isDark ? '#080c14' : '#f8fafc',
+        backgroundImage: isDark
+          ? 'radial-gradient(ellipse 70% 40% at 50% 0%, rgba(59, 130, 246, 0.12), transparent 70%), radial-gradient(ellipse 50% 30% at 85% 15%, rgba(139, 92, 246, 0.1), transparent 60%)'
+          : 'radial-gradient(ellipse 70% 40% at 50% 0%, rgba(99, 102, 241, 0.08), transparent 70%), radial-gradient(ellipse 50% 30% at 85% 15%, rgba(236, 72, 153, 0.05), transparent 60%)',
+        backgroundAttachment: 'fixed',
+        pb: 8,
+        transition: 'background-color 0.3s ease',
+        overflowX: 'hidden',
+      }}
+    >
       <Header
         onOpenKeyModal={() => setIsKeyModalOpen(true)}
         hasApiKey={effectiveHasKey}
@@ -567,10 +581,21 @@ export default function App() {
         onNavigateHome={() => setCurrentView('landing')}
       />
 
-      <Container maxWidth="xl" sx={{ mt: 4 }}>
+      <Container maxWidth="xl" sx={{ mt: 3.5, px: { xs: 2, sm: 3 } }}>
         <Grid container spacing={3}>
           {/* Main Triage Section */}
-          <Grid item xs={12} lg={8.5}>
+          <Grid
+            item
+            xs={12}
+            lg={8.5}
+            sx={{
+              animation: 'fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both',
+              '@keyframes fadeInUp': {
+                '0%': { opacity: 0, transform: 'translateY(16px)' },
+                '100%': { opacity: 1, transform: 'translateY(0)' },
+              },
+            }}
+          >
             {/* Scenario Presets (Scenario A & B) */}
             <SamplePicker
               samples={samples}
@@ -615,7 +640,14 @@ export default function App() {
           </Grid>
 
           {/* Persistent Activity Log / History Sidebar Across Logouts */}
-          <Grid item xs={12} lg={3.5}>
+          <Grid
+            item
+            xs={12}
+            lg={3.5}
+            sx={{
+              animation: 'fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both',
+            }}
+          >
             <HistorySidebar
               history={history}
               onSelectHistoryItem={handleSelectHistoryItem}

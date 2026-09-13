@@ -97,52 +97,70 @@ export default function SamplePicker({
     <Card
       sx={{
         mb: 3,
-        borderRadius: 3,
-        border: '1px solid',
-        borderColor: 'divider',
-        backgroundColor: 'background.paper',
-        boxShadow: isDark
-          ? '0 4px 20px -2px rgba(0, 0, 0, 0.5)'
-          : '0 4px 20px -2px rgba(15, 23, 42, 0.04)',
+        borderRadius: 3.5,
+        position: 'relative',
         overflow: 'hidden',
-        transition: 'all 0.2s ease',
+        border: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #e2e8f0',
+        backgroundColor: isDark ? 'rgba(15, 23, 42, 0.8)' : '#ffffff',
+        backdropFilter: 'blur(20px)',
+        boxShadow: isDark
+          ? '0 10px 30px -10px rgba(0, 0, 0, 0.6), 0 0 20px rgba(59, 130, 246, 0.08)'
+          : '0 8px 24px -6px rgba(15, 23, 42, 0.06)',
+        transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '2px',
+          background: 'linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%)',
+          backgroundSize: '200% 100%',
+          animation: 'shimmerAccent 4s linear infinite',
+        },
+        '@keyframes shimmerAccent': {
+          '0%': { backgroundPosition: '0% 0%' },
+          '100%': { backgroundPosition: '200% 0%' },
+        },
         '&:hover': {
           boxShadow: isDark
-            ? '0 6px 24px -2px rgba(0, 0, 0, 0.6)'
-            : '0 6px 24px -2px rgba(15, 23, 42, 0.08)',
+            ? '0 14px 36px -10px rgba(0, 0, 0, 0.7), 0 0 25px rgba(139, 92, 246, 0.15)'
+            : '0 12px 30px -6px rgba(15, 23, 42, 0.1)',
         },
       }}
     >
-      <CardContent sx={{ pb: '18px !important', pt: 2.2 }}>
+      <CardContent sx={{ pb: '18px !important', pt: 2.4, px: 2.8 }}>
         {/* Header and Controls */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 1 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.2, flexWrap: 'wrap', gap: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2 }}>
             <Box
               sx={{
-                width: 28,
-                height: 28,
-                borderRadius: 1.5,
-                backgroundColor: isDark ? 'rgba(59, 130, 246, 0.15)' : 'rgba(37, 99, 235, 0.1)',
-                color: 'primary.main',
+                width: 30,
+                height: 30,
+                borderRadius: 2,
+                background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
+                color: '#ffffff',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                boxShadow: '0 2px 8px rgba(37, 99, 235, 0.35)',
               }}
             >
               <FlashOnIcon fontSize="small" />
             </Box>
-            <Typography variant="subtitle1" fontWeight="800" sx={{ color: 'text.primary' }}>
+            <Typography variant="subtitle1" fontWeight="800" sx={{ color: isDark ? '#ffffff' : '#0f172a', letterSpacing: '-0.01em' }}>
               Scenario Presets & Dynamic Mock Testing
             </Typography>
             <Chip
               size="small"
               label={`${samples.length} scenarios`}
               sx={{
-                height: 20,
-                fontSize: '0.7rem',
+                height: 22,
+                fontSize: '0.72rem',
                 backgroundColor: isDark ? 'rgba(255, 255, 255, 0.06)' : '#f1f5f9',
-                color: 'text.secondary',
-                fontWeight: 600,
+                color: isDark ? '#94a3b8' : '#64748b',
+                fontWeight: 700,
+                borderRadius: 1.5,
               }}
             />
           </Box>
@@ -152,19 +170,28 @@ export default function SamplePicker({
             <Button
               variant="contained"
               size="small"
-              startIcon={generatingAi ? <CircularProgress size={14} color="inherit" /> : <AutoAwesomeIcon />}
+              startIcon={generatingAi ? <CircularProgress size={14} color="inherit" /> : <AutoAwesomeIcon sx={{ fontSize: 16 }} />}
               onClick={handleOpenAiModal}
               disabled={generatingAi}
               sx={{
-                background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
-                fontSize: '0.78rem',
+                background: 'linear-gradient(135deg, #ec4899 0%, #8b5cf6 50%, #3b82f6 100%)',
+                backgroundSize: '200% 200%',
+                animation: 'aiGenGrad 5s ease infinite alternate',
+                fontSize: '0.8rem',
                 textTransform: 'none',
                 fontWeight: 700,
-                borderRadius: 2,
-                px: 2,
-                boxShadow: '0 2px 8px rgba(124, 58, 237, 0.25)',
+                borderRadius: 2.2,
+                px: 2.2,
+                py: 0.6,
+                boxShadow: '0 4px 14px rgba(139, 92, 246, 0.35)',
+                transition: 'all 0.25s ease',
                 '&:hover': {
-                  background: 'linear-gradient(135deg, #1d4ed8 0%, #6d28d9 100%)',
+                  transform: 'translateY(-1px)',
+                  boxShadow: '0 6px 20px rgba(236, 72, 153, 0.5)',
+                },
+                '@keyframes aiGenGrad': {
+                  '0%': { backgroundPosition: '0% 50%' },
+                  '100%': { backgroundPosition: '100% 50%' },
                 },
               }}
             >
@@ -176,18 +203,20 @@ export default function SamplePicker({
               variant="outlined"
               color="inherit"
               size="small"
-              startIcon={<AddIcon />}
+              startIcon={<AddIcon sx={{ fontSize: 17 }} />}
               onClick={() => setIsCreateModalOpen(true)}
               sx={{
-                fontSize: '0.78rem',
+                fontSize: '0.8rem',
                 textTransform: 'none',
                 fontWeight: 600,
-                borderRadius: 2,
-                borderColor: 'divider',
-                color: 'text.secondary',
+                borderRadius: 2.2,
+                borderColor: isDark ? '#334155' : '#cbd5e1',
+                color: isDark ? '#cbd5e1' : '#475569',
+                transition: 'all 0.2s ease',
                 '&:hover': {
-                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : '#f8fafc',
-                  borderColor: isDark ? 'rgba(255, 255, 255, 0.25)' : '#94a3b8',
+                  transform: 'translateY(-1px)',
+                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f8fafc',
+                  borderColor: isDark ? '#64748b' : '#94a3b8',
                 },
               }}
             >
@@ -196,7 +225,7 @@ export default function SamplePicker({
 
             {/* Reset Defaults Button */}
             <Tooltip title="Reset all scenarios back to the 5 baseline defaults">
-              <IconButton size="small" onClick={onResetSamples} sx={{ color: 'text.secondary', '&:hover': { color: 'text.primary' } }}>
+              <IconButton size="small" onClick={onResetSamples} sx={{ color: isDark ? '#94a3b8' : '#64748b', '&:hover': { color: isDark ? '#fff' : '#0f172a' } }}>
                 <RestartAltIcon fontSize="small" />
               </IconButton>
             </Tooltip>
@@ -259,24 +288,31 @@ export default function SamplePicker({
                 variant={isSelected ? 'filled' : 'outlined'}
                 sx={{
                   py: 2.2,
-                  px: 0.8,
+                  px: 1,
                   fontSize: '0.84rem',
-                  borderRadius: 2,
-                  transition: 'all 0.15s ease',
-                  borderColor: isSelected ? '#7c3aed' : sample.is_custom ? (isDark ? '#8b5cf6' : '#c4b5fd') : 'divider',
+                  borderRadius: 2.5,
+                  transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+                  borderColor: isSelected
+                    ? (isDark ? '#a855f7' : '#7c3aed')
+                    : sample.is_custom
+                    ? (isDark ? '#8b5cf6' : '#c4b5fd')
+                    : (isDark ? 'rgba(255, 255, 255, 0.09)' : '#e2e8f0'),
                   backgroundColor: isSelected
-                    ? (isDark ? 'rgba(124, 58, 237, 0.25)' : 'rgba(124, 58, 237, 0.08)')
+                    ? (isDark ? 'rgba(139, 92, 246, 0.22)' : 'rgba(124, 58, 237, 0.08)')
                     : sample.is_custom
                     ? (isDark ? 'rgba(139, 92, 246, 0.12)' : '#faf5ff')
-                    : (isDark ? '#0b0f19' : '#ffffff'),
-                  color: isSelected ? (isDark ? '#c084fc' : '#6d28d9') : 'text.primary',
-                  boxShadow: isSelected ? (isDark ? '0 0 0 2px rgba(139, 92, 246, 0.4)' : '0 0 0 2px rgba(124, 58, 237, 0.2)') : 'none',
+                    : (isDark ? 'rgba(15, 23, 42, 0.6)' : '#ffffff'),
+                  color: isSelected ? (isDark ? '#f1f5f9' : '#6d28d9') : 'text.primary',
+                  boxShadow: isSelected
+                    ? (isDark ? '0 0 16px rgba(139, 92, 246, 0.4), 0 0 0 1.5px #a855f7' : '0 4px 14px rgba(124, 58, 237, 0.2), 0 0 0 1.5px #7c3aed')
+                    : 'none',
                   '&:hover': {
                     backgroundColor: isSelected
-                      ? (isDark ? 'rgba(124, 58, 237, 0.35)' : 'rgba(124, 58, 237, 0.12)')
-                      : (isDark ? 'rgba(255, 255, 255, 0.05)' : '#f8fafc'),
-                    borderColor: isSelected ? '#7c3aed' : (isDark ? 'rgba(255, 255, 255, 0.3)' : '#94a3b8'),
-                    transform: 'translateY(-1px)',
+                      ? (isDark ? 'rgba(139, 92, 246, 0.32)' : 'rgba(124, 58, 237, 0.12)')
+                      : (isDark ? 'rgba(255, 255, 255, 0.06)' : '#f8fafc'),
+                    borderColor: isSelected ? '#a855f7' : (isDark ? 'rgba(255, 255, 255, 0.25)' : '#94a3b8'),
+                    transform: 'translateY(-2px)',
+                    boxShadow: isDark ? '0 4px 14px rgba(0, 0, 0, 0.4)' : '0 4px 12px rgba(0, 0, 0, 0.05)',
                   },
                 }}
               />

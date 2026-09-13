@@ -257,21 +257,43 @@ export default function TriageResultCard({
   return (
     <Card
       sx={{
-        borderRadius: 3,
-        border: '1px solid',
-        borderColor: 'divider',
-        backgroundColor: 'background.paper',
-        boxShadow: `0 8px 32px -4px ${priorityStyle.auraColor}, 0 4px 16px ${isDark ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.04)'}`,
+        borderRadius: 3.5,
+        border: isDark ? '1px solid rgba(255, 255, 255, 0.09)' : '1px solid #e2e8f0',
+        backgroundColor: isDark ? 'rgba(15, 23, 42, 0.85)' : '#ffffff',
+        backdropFilter: 'blur(20px)',
+        boxShadow: isDark
+          ? `0 12px 36px -8px rgba(0,0,0,0.6), 0 0 24px ${priorityStyle.auraColor}`
+          : `0 8px 30px -6px rgba(15, 23, 42, 0.08), 0 0 16px ${priorityStyle.auraColor}`,
         overflow: 'hidden',
-        transition: 'all 0.3s ease',
+        position: 'relative',
+        transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+        animation: 'resultEntrance 0.45s cubic-bezier(0.16, 1, 0.3, 1) both',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '2px',
+          background: 'linear-gradient(90deg, #10b981 0%, #3b82f6 50%, #8b5cf6 100%)',
+          backgroundSize: '200% 100%',
+          animation: 'shimmerAccentResult 4s linear infinite',
+        },
+        '@keyframes resultEntrance': {
+          '0%': { opacity: 0, transform: 'translateY(16px)' },
+          '100%': { opacity: 1, transform: 'translateY(0)' },
+        },
+        '@keyframes shimmerAccentResult': {
+          '0%': { backgroundPosition: '0% 0%' },
+          '100%': { backgroundPosition: '200% 0%' },
+        },
       }}
     >
       {/* Header Bar */}
       <Box
         sx={{
-          backgroundColor: isDark ? 'rgba(255, 255, 255, 0.02)' : '#ffffff',
-          borderBottom: '1px solid',
-          borderColor: 'divider',
+          backgroundColor: isDark ? 'rgba(8, 12, 20, 0.5)' : '#fafafa',
+          borderBottom: isDark ? '1px solid rgba(255, 255, 255, 0.06)' : '1px solid #e2e8f0',
           px: 3,
           py: 2,
           display: 'flex',
@@ -293,6 +315,17 @@ export default function TriageResultCard({
               borderStyle: 'solid',
               fontWeight: 800,
               fontSize: '0.85rem',
+              animation: 'priorityPulse 2.5s ease-in-out infinite',
+              '@keyframes priorityPulse': {
+                '0%, 100%': {
+                  boxShadow: `0 0 0 0 ${priorityStyle.auraColor}`,
+                  transform: 'scale(1)',
+                },
+                '50%': {
+                  boxShadow: `0 0 12px 3px ${priorityStyle.auraColor}`,
+                  transform: 'scale(1.02)',
+                },
+              },
             }}
           />
           <Typography variant="body2" fontWeight="700" sx={{ color: 'text.primary' }}>
@@ -352,10 +385,16 @@ export default function TriageResultCard({
               sx={{
                 p: 2,
                 borderRadius: 2.5,
-                backgroundColor: isDark ? '#0b0f19' : '#f8fafc',
+                backgroundColor: isDark ? 'rgba(11, 15, 25, 0.65)' : '#f8fafc',
                 border: '1px solid',
-                borderColor: 'divider',
+                borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0',
                 height: '100%',
+                transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  borderColor: isDark ? 'rgba(59, 130, 246, 0.4)' : '#93c5fd',
+                  boxShadow: isDark ? '0 6px 18px rgba(0, 0, 0, 0.3)' : '0 4px 12px rgba(0, 0, 0, 0.05)',
+                },
               }}
             >
               <Typography variant="caption" color="text.secondary" fontWeight="700" textTransform="uppercase">
@@ -365,7 +404,13 @@ export default function TriageResultCard({
                 <Chip
                   label={result.category}
                   color="primary"
-                  sx={{ fontWeight: 700, fontSize: '0.9rem', px: 0.5, borderRadius: 2 }}
+                  sx={{
+                    fontWeight: 700,
+                    fontSize: '0.9rem',
+                    px: 0.5,
+                    borderRadius: 2,
+                    boxShadow: '0 2px 8px rgba(37, 99, 235, 0.25)',
+                  }}
                 />
               </Box>
             </Box>
@@ -377,10 +422,16 @@ export default function TriageResultCard({
               sx={{
                 p: 2,
                 borderRadius: 2.5,
-                backgroundColor: isDark ? '#0b0f19' : '#f8fafc',
+                backgroundColor: isDark ? 'rgba(11, 15, 25, 0.65)' : '#f8fafc',
                 border: '1px solid',
-                borderColor: 'divider',
+                borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0',
                 height: '100%',
+                transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  borderColor: isDark ? 'rgba(139, 92, 246, 0.4)' : '#c4b5fd',
+                  boxShadow: isDark ? '0 6px 18px rgba(0, 0, 0, 0.3)' : '0 4px 12px rgba(0, 0, 0, 0.05)',
+                },
               }}
             >
               <Typography variant="caption" color="text.secondary" fontWeight="700" textTransform="uppercase">
@@ -404,10 +455,16 @@ export default function TriageResultCard({
               sx={{
                 p: 2,
                 borderRadius: 2.5,
-                backgroundColor: isDark ? '#0b0f19' : '#f8fafc',
+                backgroundColor: isDark ? 'rgba(11, 15, 25, 0.65)' : '#f8fafc',
                 border: '1px solid',
-                borderColor: 'divider',
+                borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0',
                 height: '100%',
+                transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  borderColor: isDark ? 'rgba(239, 68, 68, 0.4)' : '#fca5a5',
+                  boxShadow: isDark ? '0 6px 18px rgba(0, 0, 0, 0.3)' : '0 4px 12px rgba(0, 0, 0, 0.05)',
+                },
               }}
             >
               <Typography variant="caption" color="text.secondary" fontWeight="700" textTransform="uppercase">
@@ -581,13 +638,16 @@ export default function TriageResultCard({
                       variant={isActive ? 'contained' : 'outlined'}
                       sx={{
                         textTransform: 'none',
-                        fontSize: '0.78rem',
-                        fontWeight: isActive ? 700 : 500,
+                        fontSize: '0.8rem',
+                        fontWeight: isActive ? 800 : 500,
                         backgroundColor: isActive ? '#7c3aed' : undefined,
-                        borderColor: 'divider',
+                        borderColor: isActive ? '#7c3aed' : 'divider',
                         color: isActive ? '#ffffff' : 'text.secondary',
+                        boxShadow: isActive ? '0 2px 10px rgba(124, 58, 237, 0.35)' : 'none',
+                        transition: 'all 0.2s ease',
                         '&:hover': {
                           backgroundColor: isActive ? '#6d28d9' : (isDark ? 'rgba(255, 255, 255, 0.05)' : '#f8fafc'),
+                          transform: 'translateY(-1px)',
                         },
                       }}
                     >
@@ -838,14 +898,29 @@ export default function TriageResultCard({
               onClick={handleSend}
               disabled={sending || sentSuccess}
               sx={{
-                px: 3.5,
-                py: 1.2,
+                px: 3.8,
+                py: 1.25,
                 borderRadius: 2.5,
-                fontWeight: 700,
+                fontWeight: 800,
                 textTransform: 'none',
-                fontSize: '0.92rem',
-                background: !sentSuccess ? 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)' : undefined,
-                boxShadow: !sentSuccess ? '0 4px 14px rgba(124, 58, 237, 0.3)' : undefined,
+                fontSize: '0.94rem',
+                background: !sentSuccess
+                  ? 'linear-gradient(135deg, #2563eb 0%, #7c3aed 50%, #ec4899 100%)'
+                  : undefined,
+                backgroundSize: '200% 200%',
+                animation: !sentSuccess ? 'transmitGrad 5s ease infinite alternate' : undefined,
+                boxShadow: !sentSuccess
+                  ? (isDark ? '0 4px 20px rgba(124, 58, 237, 0.45)' : '0 4px 16px rgba(37, 99, 235, 0.35)')
+                  : undefined,
+                transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+                '&:hover': {
+                  transform: !sentSuccess ? 'translateY(-2px)' : undefined,
+                  boxShadow: !sentSuccess ? '0 8px 26px rgba(236, 72, 153, 0.55)' : undefined,
+                },
+                '@keyframes transmitGrad': {
+                  '0%': { backgroundPosition: '0% 50%' },
+                  '100%': { backgroundPosition: '100% 50%' },
+                },
               }}
             >
               {sending

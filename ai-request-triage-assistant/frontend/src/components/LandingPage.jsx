@@ -46,10 +46,140 @@ import LayersIcon from '@mui/icons-material/Layers';
 import MemoryIcon from '@mui/icons-material/Memory';
 import TuneIcon from '@mui/icons-material/Tune';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
+import SensorsIcon from '@mui/icons-material/Sensors';
+import SendIcon from '@mui/icons-material/Send';
+import EngineeringIcon from '@mui/icons-material/Engineering';
+import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import SupportAgentIcon from '@mui/icons-material/SupportAgent';
+import CodeIcon from '@mui/icons-material/Code';
 
 import ThemeToggle from './ThemeToggle';
 import ScrollReveal from './ScrollReveal';
 import { useColorMode } from '../ThemeContext';
+
+const WEBHOOK_PRESETS = [
+  {
+    id: 'cloudwatch',
+    name: '🚨 AWS CloudWatch Alarm',
+    channel: 'AWS SNS / CloudWatch Alert',
+    badge: 'P1 Infrastructure',
+    badgeColor: '#ef4444',
+    endpoint: 'POST /api/webhooks/incoming?source=cloudwatch',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Amz-Sns-Topic-Arn': 'arn:aws:sns:us-east-1:1094827:prod-critical-alarms',
+      'X-Amz-Sns-Message-Type': 'Notification',
+    },
+    rawPayload: {
+      alarm_name: 'Checkout_API_504_Gateway_Timeout_Spike',
+      alarm_state: 'ALARM',
+      severity: 'CRITICAL',
+      affected_service: 'api-checkout-cluster-us-east-1',
+      threshold: '504 error rate > 5% for 3m (Actual: 42.8%)',
+      timestamp: '2026-09-13T17:35:10Z',
+      message: 'CRITICAL: Checkout API returning 504 Gateway Timeouts on Visa/Mastercard payments. 840+ customer transactions halted in past 5 minutes. Direct revenue loss in progress.',
+    },
+    extracted: {
+      category: 'Technical',
+      priority: 'Urgent',
+      priorityReason: 'Production checkout outage causing direct monetary loss and blocking active customer payments.',
+      owner: 'Engineering',
+      entities: ['Checkout API', '504 Gateway Timeout', '840+ failed transactions', 'Visa/Mastercard'],
+      triageSummary: 'Critical payment gateway 504 outage halting checkout transactions with active revenue loss.',
+    },
+  },
+  {
+    id: 'stripe',
+    name: '💳 Stripe Chargeback Dispute',
+    channel: 'Stripe Webhooks API',
+    badge: 'Financial Risk',
+    badgeColor: '#f59e0b',
+    endpoint: 'POST /api/webhooks/stripe?event=charge.dispute.created',
+    headers: {
+      'Content-Type': 'application/json',
+      'Stripe-Signature': 't=1726249122,v1=9f82c6109e20a4b7c88',
+      'X-Stripe-Event': 'charge.dispute.created',
+    },
+    rawPayload: {
+      event_type: 'charge.dispute.created',
+      dispute_id: 'dp_1N9x82Km40vL',
+      disputed_amount_cents: 1420000,
+      currency: 'usd',
+      reason: 'subscription_rate_mismatch',
+      evidence_due_date: '2026-09-19T23:59:59Z',
+      customer_email: 'sarah.jenkins@apexdynamics.co',
+      notes: 'Customer disputed charge of $14,200 citing agreed contract rate of $8,500 on invoice #INV-889.',
+    },
+    extracted: {
+      category: 'Billing',
+      priority: 'High',
+      priorityReason: 'Active Stripe chargeback dispute with 6-day legal evidence window and contract rate variance.',
+      owner: 'Finance',
+      entities: ['$14,200 Dispute', 'Invoice #INV-889', 'sarah.jenkins@apexdynamics.co', 'Evidence Due Sep 19'],
+      triageSummary: 'Stripe chargeback dispute for $14,200 due to contract rate mismatch. Evidence submission deadline active.',
+    },
+  },
+  {
+    id: 'slack',
+    name: '💬 Slack VIP Escalation',
+    channel: 'Slack Events API / Bot',
+    badge: 'VIP Strategic Chat',
+    badgeColor: '#8b5cf6',
+    endpoint: 'POST /api/integrations/slack/events',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Slack-Signature': 'v0=a23b49c01827419df82',
+      'X-Slack-Request-Timestamp': '1726249140',
+    },
+    rawPayload: {
+      type: 'event_callback',
+      event: {
+        type: 'app_mention',
+        channel: '#enterprise-vip-apex',
+        user: 'U04981XZP (Marcus Vance, CTO)',
+        account_tier: 'Strategic Tier-1 ($250k ARR)',
+        text: '@TriageBot URGENT: Our single sign-on SSO stopped working after the 9 AM maintenance. 120 employees locked out of payroll system!',
+      },
+    },
+    extracted: {
+      category: 'Technical',
+      priority: 'Urgent',
+      priorityReason: 'Tier-1 enterprise CTO reporting complete employee lockout from business-critical payroll portal.',
+      owner: 'Engineering',
+      entities: ['SSO Lockout', 'Marcus Vance (CTO)', '120 employees', 'Strategic Tier-1 ($250k ARR)'],
+      triageSummary: 'Tier-1 client CTO reporting mission-critical SSO lockout blocking 120 employees from payroll.',
+    },
+  },
+  {
+    id: 'zendesk',
+    name: '📈 Zendesk 250-Seat Expansion',
+    channel: 'Zendesk Omnichannel API',
+    badge: 'Sales Expansion',
+    badgeColor: '#0ea5e9',
+    endpoint: 'POST /api/inbound/zendesk/tickets',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer zd_tok_live_9941a',
+      'X-Zendesk-Ticket-Id': 'ZD-99412',
+    },
+    rawPayload: {
+      ticket_id: 'ZD-99412',
+      organization: 'Enterprise Global (2,500 staff)',
+      submitter_email: 'elena.rostova@enterpriseglobal.com',
+      subject: 'Executive Approval: Company-wide 250-seat rollout',
+      body: 'Our pilot team has completed their evaluation and leadership approved purchasing 250 enterprise seats next quarter. Please send over volume tier contract, custom onboarding schedule, and SOC-2 report.',
+    },
+    extracted: {
+      category: 'Sales',
+      priority: 'Medium',
+      priorityReason: 'High-probability enterprise seat expansion requiring custom volume quotes and enterprise contract terms.',
+      owner: 'Sales Team',
+      entities: ['250 Enterprise Seats', 'Enterprise Global', 'SOC-2 Report Request', 'Volume Pricing'],
+      triageSummary: 'High-value expansion opportunity for 250 seats requesting volume pricing and SOC-2 documentation.',
+    },
+  },
+];
 
 const STUDIO_PRESETS = [
   {
@@ -167,6 +297,54 @@ export default function LandingPage({
   const [studioStep, setStudioStep] = useState(0);
   const [studioResult, setStudioResult] = useState(STUDIO_PRESETS[0]);
   const [copiedDraft, setCopiedDraft] = useState(false);
+
+  // Inbound Webhook Simulator State
+  const [webhookModalOpen, setWebhookModalOpen] = useState(false);
+  const [selectedWebhookId, setSelectedWebhookId] = useState('cloudwatch');
+  const [dispatchingWebhook, setDispatchingWebhook] = useState(false);
+  const [webhookDispatched, setWebhookDispatched] = useState(false);
+  const [webhookLatency, setWebhookLatency] = useState(142);
+  const [copiedWebhookPayload, setCopiedWebhookPayload] = useState(false);
+
+  const activeWebhook = WEBHOOK_PRESETS.find((w) => w.id === selectedWebhookId) || WEBHOOK_PRESETS[0];
+
+  const handleDispatchWebhook = () => {
+    setDispatchingWebhook(true);
+    setWebhookDispatched(false);
+    setTimeout(() => {
+      setDispatchingWebhook(false);
+      setWebhookDispatched(true);
+      setWebhookLatency(Math.floor(Math.random() * 65) + 115);
+    }, 450);
+  };
+
+  const handleCopyWebhookPayload = (payload) => {
+    navigator.clipboard.writeText(typeof payload === 'string' ? payload : JSON.stringify(payload, null, 2));
+    setCopiedWebhookPayload(true);
+    setTimeout(() => setCopiedWebhookPayload(false), 2000);
+  };
+
+  const handleTransferToStudio = (webhook) => {
+    const textToTransfer =
+      webhook.rawPayload.message ||
+      webhook.rawPayload.notes ||
+      webhook.rawPayload.body ||
+      (webhook.rawPayload.event && webhook.rawPayload.event.text) ||
+      '';
+    setStudioText(textToTransfer);
+    const triage = computeLocalTriage(textToTransfer);
+    setStudioResult({
+      title: webhook.name,
+      ...triage,
+      category: webhook.extracted.category,
+      priority: webhook.extracted.priority,
+      priority_reason: webhook.extracted.priorityReason,
+      assigned_owner: webhook.extracted.owner,
+      draft_response: `Hi, Thank you for contacting our team. We have ingested your event payload and our ${webhook.extracted.owner} team has been routed with priority SLA.`,
+    });
+    setWebhookModalOpen(false);
+    setAiStudioOpen(true);
+  };
 
   // Scroll tracking states
   const [scrollProgress, setScrollProgress] = useState(0);
@@ -394,25 +572,45 @@ export default function LandingPage({
         sx={{
           backgroundColor: hasScrolled
             ? isDark
-              ? 'rgba(8, 12, 20, 0.88)'
-              : 'rgba(255, 255, 255, 0.88)'
+              ? 'rgba(8, 12, 20, 0.92)'
+              : 'rgba(255, 255, 255, 0.92)'
             : isDark
-            ? 'rgba(8, 12, 20, 0.6)'
-            : 'rgba(255, 255, 255, 0.6)',
-          backdropFilter: 'blur(16px)',
+            ? 'rgba(8, 12, 20, 0.65)'
+            : 'rgba(255, 255, 255, 0.65)',
+          backdropFilter: 'blur(24px)',
           borderBottom: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(0, 0, 0, 0.07)',
           boxShadow: hasScrolled
             ? isDark
-              ? '0 10px 30px -10px rgba(0, 0, 0, 0.5)'
-              : '0 10px 30px -10px rgba(0, 0, 0, 0.08)'
+              ? '0 12px 32px -10px rgba(0, 0, 0, 0.65)'
+              : '0 12px 30px -10px rgba(0, 0, 0, 0.08)'
             : 'none',
-          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          transition: 'all 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
           py: hasScrolled ? 0.3 : 0.8,
+          position: 'sticky',
+          top: 0,
+          zIndex: 1100,
+          '&::after': {
+            content: '""',
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: '1.5px',
+            background: hasScrolled
+              ? 'linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.5), rgba(168, 85, 247, 0.6), rgba(236, 72, 153, 0.5), transparent)'
+              : 'transparent',
+            backgroundSize: '200% 100%',
+            animation: 'headerShimmer 6s linear infinite',
+          },
+          '@keyframes headerShimmer': {
+            '0%': { backgroundPosition: '0% 0%' },
+            '100%': { backgroundPosition: '200% 0%' },
+          },
         }}
       >
         <Container maxWidth="xl">
           <Toolbar sx={{ justifyContent: 'space-between', px: { xs: 0, sm: 1 } }}>
-            {/* Logo */}
+            {/* Logo with Animated Glow & Live Beacon */}
             <Box
               onClick={() => scrollToSection('overview')}
               sx={{
@@ -421,54 +619,109 @@ export default function LandingPage({
                 gap: 1.5,
                 cursor: 'pointer',
                 userSelect: 'none',
+                transition: 'transform 0.25s ease',
+                '&:hover': {
+                  transform: 'scale(1.02)',
+                },
               }}
             >
               <Box
                 sx={{
-                  background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
+                  background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 50%, #ec4899 100%)',
+                  backgroundSize: '200% 200%',
+                  animation: 'logoGradient 6s ease infinite alternate',
                   color: '#fff',
-                  p: 1,
-                  borderRadius: 2,
+                  p: 0.9,
+                  borderRadius: 2.2,
                   display: 'flex',
                   alignItems: 'center',
-                  boxShadow: '0 4px 14px rgba(37, 99, 235, 0.4)',
-                  transition: 'transform 0.2s ease',
-                  '&:hover': { transform: 'scale(1.05)' },
+                  boxShadow: isDark
+                    ? '0 4px 18px rgba(124, 58, 237, 0.45)'
+                    : '0 4px 14px rgba(37, 99, 235, 0.35)',
+                  transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                  '&:hover': {
+                    transform: 'rotate(-6deg) scale(1.08)',
+                    boxShadow: '0 6px 24px rgba(236, 72, 153, 0.55)',
+                  },
+                  '@keyframes logoGradient': {
+                    '0%': { backgroundPosition: '0% 50%' },
+                    '100%': { backgroundPosition: '100% 50%' },
+                  },
                 }}
               >
-                <SmartToyIcon fontSize="small" />
+                <SmartToyIcon sx={{ fontSize: 22 }} />
               </Box>
               <Box>
-                <Typography
-                  variant="subtitle1"
-                  fontWeight="800"
-                  sx={{
-                    color: isDark ? '#ffffff' : '#0f172a',
-                    letterSpacing: '-0.02em',
-                    lineHeight: 1.2,
-                  }}
-                >
-                  AI Request Triage
-                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
+                  <Typography
+                    variant="subtitle1"
+                    fontWeight="800"
+                    sx={{
+                      color: isDark ? '#ffffff' : '#0f172a',
+                      letterSpacing: '-0.02em',
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    AI Request Triage
+                  </Typography>
+                  <Box
+                    sx={{
+                      px: 0.8,
+                      py: 0.15,
+                      borderRadius: 1.5,
+                      fontSize: '0.62rem',
+                      fontFamily: 'monospace',
+                      fontWeight: 800,
+                      backgroundColor: isDark ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.1)',
+                      border: '1px solid rgba(16, 185, 129, 0.35)',
+                      color: '#10b981',
+                      display: { xs: 'none', sm: 'inline-flex' },
+                      alignItems: 'center',
+                      gap: 0.4,
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: 5,
+                        height: 5,
+                        borderRadius: '50%',
+                        backgroundColor: '#10b981',
+                        animation: 'liveDot 1.5s ease-in-out infinite',
+                        '@keyframes liveDot': {
+                          '0%, 100%': { opacity: 1, transform: 'scale(1)' },
+                          '50%': { opacity: 0.4, transform: 'scale(0.7)' },
+                        },
+                      }}
+                    />
+                    LIVE
+                  </Box>
+                </Box>
                 <Typography
                   variant="caption"
                   sx={{
                     color: isDark ? '#94a3b8' : '#64748b',
                     fontSize: '0.72rem',
                     fontWeight: 500,
+                    letterSpacing: '0.01em',
                   }}
                 >
-                  LangGraph • Google Gemini
+                  LangGraph • Google Gemini 2.0
                 </Typography>
               </Box>
             </Box>
 
-            {/* Desktop Quick Jump Links */}
+            {/* Desktop Capsule Navigation Links */}
             <Stack
               direction="row"
-              spacing={2.5}
+              spacing={0.8}
               alignItems="center"
-              sx={{ display: { xs: 'none', md: 'flex' } }}
+              sx={{
+                display: { xs: 'none', md: 'flex' },
+                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.03)',
+                p: 0.6,
+                borderRadius: 50,
+                border: isDark ? '1px solid rgba(255, 255, 255, 0.06)' : '1px solid rgba(0, 0, 0, 0.05)',
+              }}
             >
               {[
                 { label: 'Overview', target: 'overview' },
@@ -478,23 +731,40 @@ export default function LandingPage({
                 { label: 'Capabilities', target: 'capabilities' },
                 { label: 'FAQ', target: 'faq' },
               ].map((link) => (
-                <Typography
+                <Box
                   key={link.target}
-                  variant="body2"
                   onClick={() => scrollToSection(link.target)}
                   sx={{
-                    color: isDark ? '#cbd5e1' : '#475569',
-                    fontWeight: 600,
+                    px: 1.8,
+                    py: 0.6,
+                    borderRadius: 50,
                     cursor: 'pointer',
-                    fontSize: '0.88rem',
-                    transition: 'color 0.2s ease',
+                    userSelect: 'none',
+                    position: 'relative',
+                    transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
                     '&:hover': {
-                      color: isDark ? '#60a5fa' : '#2563eb',
+                      backgroundColor: isDark ? 'rgba(139, 92, 246, 0.16)' : 'rgba(37, 99, 235, 0.09)',
+                      transform: 'translateY(-1px)',
+                      '& .nav-text': {
+                        color: isDark ? '#c084fc' : '#2563eb',
+                      },
                     },
                   }}
                 >
-                  {link.label}
-                </Typography>
+                  <Typography
+                    className="nav-text"
+                    variant="body2"
+                    sx={{
+                      color: isDark ? '#cbd5e1' : '#475569',
+                      fontWeight: 600,
+                      fontSize: '0.84rem',
+                      letterSpacing: '-0.01em',
+                      transition: 'color 0.2s ease',
+                    }}
+                  >
+                    {link.label}
+                  </Typography>
+                </Box>
               ))}
             </Stack>
 
@@ -524,10 +794,15 @@ export default function LandingPage({
                     sx={{
                       background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
                       fontWeight: 700,
-                      borderRadius: 2,
-                      px: 2,
+                      borderRadius: 2.2,
+                      px: 2.2,
                       textTransform: 'none',
                       boxShadow: '0 4px 14px rgba(37, 99, 235, 0.35)',
+                      transition: 'all 0.25s ease',
+                      '&:hover': {
+                        transform: 'translateY(-2px)',
+                        boxShadow: '0 6px 20px rgba(124, 58, 237, 0.5)',
+                      },
                     }}
                   >
                     Open Workspace
@@ -557,13 +832,16 @@ export default function LandingPage({
                     sx={{
                       borderColor: isDark ? '#334155' : '#cbd5e1',
                       color: isDark ? '#f8fafc' : '#334155',
-                      borderRadius: 2,
+                      borderRadius: 2.2,
                       textTransform: 'none',
                       fontWeight: 600,
-                      px: 1.8,
+                      px: 2,
+                      py: 0.6,
+                      transition: 'all 0.25s ease',
                       '&:hover': {
-                        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.04)',
-                        borderColor: isDark ? '#64748b' : '#94a3b8',
+                        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
+                        borderColor: isDark ? '#60a5fa' : '#2563eb',
+                        transform: 'translateY(-1px)',
                       },
                     }}
                   >
@@ -573,14 +851,38 @@ export default function LandingPage({
                     variant="contained"
                     size="small"
                     onClick={onOpenAuthModal}
-                    startIcon={<FlashOnIcon />}
+                    startIcon={
+                      <FlashOnIcon
+                        sx={{
+                          animation: 'sparkle 2.2s ease-in-out infinite',
+                          '@keyframes sparkle': {
+                            '0%, 100%': { transform: 'scale(1)', opacity: 1 },
+                            '50%': { transform: 'scale(1.25) rotate(12deg)', opacity: 0.85 },
+                          },
+                        }}
+                      />
+                    }
                     sx={{
-                      background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
+                      background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 50%, #ec4899 100%)',
+                      backgroundSize: '200% 200%',
+                      animation: 'launchGradient 5s ease infinite alternate',
                       fontWeight: 700,
-                      borderRadius: 2,
+                      borderRadius: 2.2,
                       textTransform: 'none',
-                      px: 2.2,
-                      boxShadow: '0 4px 14px rgba(37, 99, 235, 0.35)',
+                      px: 2.5,
+                      py: 0.7,
+                      boxShadow: isDark
+                        ? '0 4px 18px rgba(124, 58, 237, 0.45)'
+                        : '0 4px 16px rgba(37, 99, 235, 0.35)',
+                      transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+                      '&:hover': {
+                        transform: 'translateY(-2px)',
+                        boxShadow: '0 8px 24px rgba(236, 72, 153, 0.55)',
+                      },
+                      '@keyframes launchGradient': {
+                        '0%': { backgroundPosition: '0% 50%' },
+                        '100%': { backgroundPosition: '100% 50%' },
+                      },
                     }}
                   >
                     Launch App
@@ -787,29 +1089,119 @@ export default function LandingPage({
               <Button
                 variant="outlined"
                 size="large"
-                onClick={currentUser ? onLaunchWorkspace : onOpenAuthModal}
-                endIcon={<ArrowForwardIcon />}
+                onClick={() => setWebhookModalOpen(true)}
+                startIcon={
+                  <Box
+                    sx={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: 2,
+                      background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#ffffff',
+                      boxShadow: '0 2px 10px rgba(99, 102, 241, 0.45)',
+                      animation: 'iconPulse 3s ease-in-out infinite',
+                      '@keyframes iconPulse': {
+                        '0%, 100%': { transform: 'scale(1)' },
+                        '50%': { transform: 'scale(1.08)' },
+                      },
+                    }}
+                  >
+                    <HubIcon sx={{ fontSize: 18 }} />
+                  </Box>
+                }
+                endIcon={
+                  <Box
+                    sx={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 0.7,
+                      px: 1.3,
+                      py: 0.35,
+                      borderRadius: 50,
+                      fontSize: '0.72rem',
+                      fontWeight: 800,
+                      letterSpacing: '0.04em',
+                      backgroundColor: isDark ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.1)',
+                      border: '1px solid rgba(16, 185, 129, 0.45)',
+                      color: '#10b981',
+                      boxShadow: '0 0 12px rgba(16, 185, 129, 0.25)',
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: 6,
+                        height: 6,
+                        borderRadius: '50%',
+                        backgroundColor: '#10b981',
+                        boxShadow: '0 0 8px #10b981',
+                        position: 'relative',
+                        '&::after': {
+                          content: '""',
+                          position: 'absolute',
+                          top: -3,
+                          left: -3,
+                          width: 12,
+                          height: 12,
+                          borderRadius: '50%',
+                          backgroundColor: '#10b981',
+                          opacity: 0.6,
+                          animation: 'radarPing 1.8s cubic-bezier(0, 0, 0.2, 1) infinite',
+                        },
+                        '@keyframes radarPing': {
+                          '0%': { transform: 'scale(0.8)', opacity: 0.8 },
+                          '75%, 100%': { transform: 'scale(2.4)', opacity: 0 },
+                        },
+                      }}
+                    />
+                    <span>LIVE</span>
+                  </Box>
+                }
                 sx={{
-                  py: 1.8,
-                  px: 3.8,
+                  py: 1.5,
+                  px: 3.2,
                   fontSize: '1.05rem',
-                  fontWeight: 600,
-                  borderRadius: 2.5,
-                  borderColor: isDark ? '#334155' : '#cbd5e1',
-                  color: isDark ? '#f8fafc' : '#0f172a',
-                  backgroundColor: isDark ? 'rgba(15, 23, 42, 0.6)' : '#ffffff',
-                  backdropFilter: 'blur(8px)',
+                  fontWeight: 700,
+                  borderRadius: 3,
+                  borderColor: isDark ? 'rgba(139, 92, 246, 0.4)' : 'rgba(124, 58, 237, 0.3)',
+                  color: isDark ? '#ffffff' : '#0f172a',
+                  backgroundColor: isDark ? 'rgba(15, 23, 42, 0.85)' : '#ffffff',
+                  backdropFilter: 'blur(20px)',
                   textTransform: 'none',
-                  boxShadow: isDark ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.04)',
-                  transition: 'all 0.25s ease',
+                  boxShadow: isDark
+                    ? '0 0 0 1.5px rgba(139, 92, 246, 0.35), 0 8px 30px -4px rgba(0, 0, 0, 0.5), 0 0 20px rgba(124, 58, 237, 0.2)'
+                    : '0 0 0 1.5px rgba(124, 58, 237, 0.25), 0 8px 24px -4px rgba(124, 58, 237, 0.12), 0 0 16px rgba(124, 58, 237, 0.08)',
+                  transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    top: 0,
+                    left: '-100%',
+                    width: '100%',
+                    height: '100%',
+                    background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent)',
+                    animation: 'shimmerSweep 4.5s infinite ease-in-out',
+                  },
+                  '@keyframes shimmerSweep': {
+                    '0%': { left: '-100%' },
+                    '20%': { left: '120%' },
+                    '100%': { left: '120%' },
+                  },
                   '&:hover': {
-                    borderColor: isDark ? '#60a5fa' : '#2563eb',
-                    backgroundColor: isDark ? 'rgba(59, 130, 246, 0.1)' : '#f8fafc',
+                    borderColor: isDark ? '#a855f7' : '#7c3aed',
+                    backgroundColor: isDark ? 'rgba(25, 33, 58, 0.95)' : '#ffffff',
                     transform: 'translateY(-2px)',
+                    boxShadow: isDark
+                      ? '0 0 0 2px rgba(168, 85, 247, 0.6), 0 12px 36px -4px rgba(0, 0, 0, 0.65), 0 0 30px rgba(139, 92, 246, 0.45)'
+                      : '0 0 0 2px rgba(124, 58, 237, 0.45), 0 12px 32px -4px rgba(124, 58, 237, 0.25), 0 0 24px rgba(124, 58, 237, 0.18)',
                   },
                 }}
               >
-                {currentUser ? 'Enter Live Workspace' : 'Launch Workspace (Sign In)'}
+                Inbound Webhook Simulator
               </Button>
             </Stack>
           </ScrollReveal>
@@ -2549,6 +2941,466 @@ export default function LandingPage({
               {currentUser ? 'Enter Workspace' : 'Sign In to Dispatch'}
             </Button>
           </Box>
+        </DialogContent>
+      </Dialog>
+
+      {/* OMNICHANNEL INBOUND WEBHOOK SIMULATOR MODAL */}
+      <Dialog
+        open={webhookModalOpen}
+        onClose={() => {
+          setWebhookModalOpen(false);
+          setDispatchingWebhook(false);
+          setWebhookDispatched(false);
+        }}
+        maxWidth="lg"
+        fullWidth
+        PaperProps={{
+          sx: {
+            backgroundColor: isDark ? '#0b0f19' : '#ffffff',
+            backgroundImage: isDark
+              ? 'radial-gradient(ellipse at top right, rgba(99, 102, 241, 0.15), transparent 60%), radial-gradient(ellipse at bottom left, rgba(236, 72, 153, 0.1), transparent 50%)'
+              : 'none',
+            border: isDark ? '1px solid rgba(139, 92, 246, 0.35)' : '1px solid #e2e8f0',
+            borderRadius: 3.5,
+            color: isDark ? '#f8fafc' : '#0f172a',
+            boxShadow: isDark
+              ? '0 25px 70px -12px rgba(0, 0, 0, 0.8), 0 0 45px rgba(99, 102, 241, 0.25)'
+              : '0 25px 60px -12px rgba(15, 23, 42, 0.18)',
+            overflow: 'hidden',
+          },
+        }}
+      >
+        {/* Title Bar */}
+        <DialogTitle
+          sx={{
+            m: 0,
+            p: 2.5,
+            borderBottom: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #f1f5f9',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            background: isDark ? 'rgba(8, 12, 20, 0.95)' : '#ffffff',
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Box
+              sx={{
+                width: 40,
+                height: 40,
+                borderRadius: 2.2,
+                background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 4px 14px rgba(99, 102, 241, 0.4)',
+                color: '#ffffff',
+              }}
+            >
+              <HubIcon sx={{ fontSize: 22 }} />
+            </Box>
+            <Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="h6" fontWeight="800" sx={{ color: isDark ? '#f8fafc' : '#0f172a', lineHeight: 1.2 }}>
+                  Omnichannel Webhook & Inbound Stream Simulator
+                </Typography>
+                <Chip
+                  size="small"
+                  label="LIVE TEST HARNESS"
+                  sx={{
+                    height: 20,
+                    fontSize: '0.66rem',
+                    fontWeight: 800,
+                    fontFamily: 'monospace',
+                    backgroundColor: isDark ? 'rgba(16, 185, 129, 0.18)' : 'rgba(16, 185, 129, 0.12)',
+                    color: '#10b981',
+                    border: '1px solid rgba(16, 185, 129, 0.35)',
+                  }}
+                />
+              </Box>
+              <Typography variant="caption" sx={{ color: isDark ? '#94a3b8' : '#64748b' }}>
+                Simulate real-world inbound payloads, inspect raw JSON schemas, and observe LangGraph deterministic intent extraction
+              </Typography>
+            </Box>
+          </Box>
+          <IconButton
+            onClick={() => {
+              setWebhookModalOpen(false);
+              setDispatchingWebhook(false);
+              setWebhookDispatched(false);
+            }}
+            sx={{
+              color: isDark ? '#94a3b8' : '#64748b',
+              '&:hover': {
+                color: isDark ? '#ffffff' : '#0f172a',
+                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
+              },
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+
+        <DialogContent sx={{ p: { xs: 2, sm: 3 }, backgroundColor: isDark ? 'rgba(8, 12, 20, 0.65)' : '#f8fafc' }}>
+          {/* Preset Selector Tabs */}
+          <Box sx={{ mb: 2.5 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: isDark ? '#94a3b8' : '#64748b',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                display: 'block',
+                mb: 1.2,
+              }}
+            >
+              Select Inbound Event Protocol:
+            </Typography>
+            <Stack direction="row" spacing={1.2} sx={{ flexWrap: 'wrap', gap: 1 }}>
+              {WEBHOOK_PRESETS.map((preset) => {
+                const isSelected = selectedWebhookId === preset.id;
+                return (
+                  <Chip
+                    key={preset.id}
+                    label={
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
+                        <span>{preset.name}</span>
+                        <Typography
+                          component="span"
+                          variant="caption"
+                          sx={{
+                            px: 0.8,
+                            py: 0.2,
+                            borderRadius: 1,
+                            fontSize: '0.68rem',
+                            fontWeight: 700,
+                            backgroundColor: isSelected
+                              ? (isDark ? 'rgba(255, 255, 255, 0.18)' : '#ffffff')
+                              : (isDark ? 'rgba(255, 255, 255, 0.06)' : '#e2e8f0'),
+                            color: isSelected
+                              ? (isDark ? '#ffffff' : '#4338ca')
+                              : 'text.secondary',
+                          }}
+                        >
+                          {preset.badge}
+                        </Typography>
+                      </Box>
+                    }
+                    clickable
+                    onClick={() => {
+                      setSelectedWebhookId(preset.id);
+                      setWebhookDispatched(false);
+                    }}
+                    variant={isSelected ? 'filled' : 'outlined'}
+                    sx={{
+                      py: 2.2,
+                      px: 0.8,
+                      borderRadius: 2.5,
+                      fontWeight: isSelected ? 800 : 500,
+                      backgroundColor: isSelected
+                        ? (isDark ? 'rgba(99, 102, 241, 0.22)' : 'rgba(99, 102, 241, 0.1)')
+                        : (isDark ? 'rgba(15, 23, 42, 0.6)' : '#ffffff'),
+                      borderColor: isSelected
+                        ? (isDark ? '#818cf8' : '#6366f1')
+                        : (isDark ? 'rgba(255, 255, 255, 0.1)' : '#cbd5e1'),
+                      color: isSelected ? (isDark ? '#e0e7ff' : '#3730a3') : 'text.primary',
+                      boxShadow: isSelected
+                        ? '0 0 16px rgba(99, 102, 241, 0.35)'
+                        : 'none',
+                      transition: 'all 0.25s ease',
+                      '&:hover': {
+                        transform: 'translateY(-1px)',
+                        borderColor: isSelected ? '#818cf8' : (isDark ? 'rgba(255, 255, 255, 0.25)' : '#94a3b8'),
+                      },
+                    }}
+                  />
+                );
+              })}
+            </Stack>
+          </Box>
+
+          {/* Split Screen Inspector: Left = Raw Webhook, Right = Extracted Cognitive Triage */}
+          <Grid container spacing={2.5}>
+            {/* Left Column: Raw Inbound Webhook Payload */}
+            <Grid item xs={12} md={6}>
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 2.2,
+                  height: '100%',
+                  borderRadius: 3,
+                  backgroundColor: isDark ? 'rgba(15, 23, 42, 0.9)' : '#ffffff',
+                  border: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #e2e8f0',
+                  boxShadow: isDark ? '0 8px 24px rgba(0, 0, 0, 0.4)' : '0 4px 16px rgba(0, 0, 0, 0.04)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}
+              >
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <CodeIcon sx={{ fontSize: 18, color: '#3b82f6' }} />
+                    <Typography variant="subtitle2" fontWeight="800" sx={{ color: isDark ? '#ffffff' : '#0f172a' }}>
+                      Raw HTTP Request & Payload
+                    </Typography>
+                  </Box>
+                  <Tooltip title={copiedWebhookPayload ? 'Copied!' : 'Copy raw JSON'}>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      color={copiedWebhookPayload ? 'success' : 'inherit'}
+                      onClick={() => handleCopyWebhookPayload(activeWebhook.rawPayload)}
+                      startIcon={copiedWebhookPayload ? <CheckIcon sx={{ fontSize: 14 }} /> : <ContentCopyIcon sx={{ fontSize: 14 }} />}
+                      sx={{ borderRadius: 1.8, fontSize: '0.72rem', textTransform: 'none', py: 0.2, px: 1, borderColor: 'divider' }}
+                    >
+                      {copiedWebhookPayload ? 'Copied' : 'Copy JSON'}
+                    </Button>
+                  </Tooltip>
+                </Box>
+
+                {/* HTTP Endpoint Pill */}
+                <Box
+                  sx={{
+                    px: 1.5,
+                    py: 0.8,
+                    mb: 1.5,
+                    borderRadius: 2,
+                    backgroundColor: isDark ? 'rgba(0, 0, 0, 0.45)' : '#f1f5f9',
+                    fontFamily: 'monospace',
+                    fontSize: '0.78rem',
+                    color: isDark ? '#93c5fd' : '#2563eb',
+                    border: isDark ? '1px solid rgba(59, 130, 246, 0.2)' : '1px solid #cbd5e1',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <span>{activeWebhook.endpoint}</span>
+                  <Chip size="small" label="HTTPS" sx={{ height: 18, fontSize: '0.65rem', fontWeight: 800, backgroundColor: isDark ? '#1e293b' : '#e2e8f0' }} />
+                </Box>
+
+                {/* JSON Code Box */}
+                <Box
+                  component="pre"
+                  sx={{
+                    m: 0,
+                    p: 2,
+                    borderRadius: 2.2,
+                    backgroundColor: isDark ? '#050811' : '#0f172a',
+                    color: '#e2e8f0',
+                    fontFamily: 'Consolas, Monaco, "Courier New", monospace',
+                    fontSize: '0.78rem',
+                    lineHeight: 1.55,
+                    overflowX: 'auto',
+                    flexGrow: 1,
+                    maxHeight: 280,
+                    border: '1px solid',
+                    borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.1)',
+                  }}
+                >
+                  <code>{JSON.stringify(activeWebhook.rawPayload, null, 2)}</code>
+                </Box>
+
+                {/* Dispatch Trigger Bar */}
+                <Box sx={{ mt: 2, pt: 1.5, borderTop: isDark ? '1px solid rgba(255, 255, 255, 0.06)' : '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1 }}>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    onClick={handleDispatchWebhook}
+                    disabled={dispatchingWebhook}
+                    startIcon={dispatchingWebhook ? <CircularProgress size={14} color="inherit" /> : <SendIcon sx={{ fontSize: 16 }} />}
+                    sx={{
+                      borderRadius: 2,
+                      textTransform: 'none',
+                      fontWeight: 700,
+                      fontSize: '0.82rem',
+                      background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
+                      boxShadow: '0 4px 14px rgba(59, 130, 246, 0.35)',
+                      '&:hover': {
+                        transform: 'translateY(-1px)',
+                        boxShadow: '0 6px 18px rgba(139, 92, 246, 0.45)',
+                      },
+                    }}
+                  >
+                    {dispatchingWebhook ? 'Dispatching Webhook...' : '⚡ Fire Webhook Event'}
+                  </Button>
+
+                  {webhookDispatched && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
+                      <CheckCircleIcon sx={{ fontSize: 16, color: '#10b981' }} />
+                      <Typography variant="caption" sx={{ color: '#10b981', fontWeight: 700 }}>
+                        HTTP 200 OK ({webhookLatency}ms)
+                      </Typography>
+                    </Box>
+                  )}
+                </Box>
+              </Paper>
+            </Grid>
+
+            {/* Right Column: Cognitive Triage & Intent Extraction */}
+            <Grid item xs={12} md={6}>
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 2.2,
+                  height: '100%',
+                  borderRadius: 3,
+                  backgroundColor: isDark ? 'rgba(15, 23, 42, 0.9)' : '#ffffff',
+                  border: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #e2e8f0',
+                  boxShadow: isDark ? '0 8px 24px rgba(0, 0, 0, 0.4)' : '0 4px 16px rgba(0, 0, 0, 0.04)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}
+              >
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <AutoAwesomeIcon sx={{ fontSize: 18, color: '#8b5cf6' }} />
+                    <Typography variant="subtitle2" fontWeight="800" sx={{ color: isDark ? '#ffffff' : '#0f172a' }}>
+                      LangGraph Cognitive Triage
+                    </Typography>
+                  </Box>
+                  <Chip
+                    size="small"
+                    label="Zero Hallucination"
+                    sx={{
+                      height: 20,
+                      fontSize: '0.68rem',
+                      fontWeight: 700,
+                      backgroundColor: isDark ? 'rgba(139, 92, 246, 0.15)' : '#ede9fe',
+                      color: isDark ? '#c084fc' : '#6d28d9',
+                    }}
+                  />
+                </Box>
+
+                {/* Classification Chips */}
+                <Grid container spacing={1.2} sx={{ mb: 2 }}>
+                  <Grid item xs={4}>
+                    <Box sx={{ p: 1.2, borderRadius: 2, backgroundColor: isDark ? '#050811' : '#f8fafc', border: '1px solid', borderColor: isDark ? 'rgba(255, 255, 255, 0.06)' : '#e2e8f0', textAlign: 'center' }}>
+                      <Typography variant="caption" sx={{ color: isDark ? '#94a3b8' : '#64748b', fontSize: '0.65rem', fontWeight: 700, display: 'block' }}>
+                        CATEGORY
+                      </Typography>
+                      <Chip size="small" label={activeWebhook.extracted.category} color="primary" sx={{ mt: 0.5, fontWeight: 700, height: 22, fontSize: '0.72rem' }} />
+                    </Box>
+                  </Grid>
+
+                  <Grid item xs={4}>
+                    <Box sx={{ p: 1.2, borderRadius: 2, backgroundColor: isDark ? '#050811' : '#f8fafc', border: '1px solid', borderColor: isDark ? 'rgba(255, 255, 255, 0.06)' : '#e2e8f0', textAlign: 'center' }}>
+                      <Typography variant="caption" sx={{ color: isDark ? '#94a3b8' : '#64748b', fontSize: '0.65rem', fontWeight: 700, display: 'block' }}>
+                        ROUTED TO
+                      </Typography>
+                      <Chip
+                        size="small"
+                        icon={activeWebhook.extracted.owner === 'Engineering' ? <EngineeringIcon sx={{ fontSize: 13 }} /> : activeWebhook.extracted.owner === 'Finance' ? <AccountBalanceIcon sx={{ fontSize: 13 }} /> : <TrendingUpIcon sx={{ fontSize: 13 }} />}
+                        label={activeWebhook.extracted.owner}
+                        color={activeWebhook.extracted.owner === 'Engineering' ? 'error' : activeWebhook.extracted.owner === 'Finance' ? 'warning' : 'info'}
+                        variant="outlined"
+                        sx={{ mt: 0.5, fontWeight: 700, height: 22, fontSize: '0.72rem' }}
+                      />
+                    </Box>
+                  </Grid>
+
+                  <Grid item xs={4}>
+                    <Box sx={{ p: 1.2, borderRadius: 2, backgroundColor: isDark ? '#050811' : '#f8fafc', border: '1px solid', borderColor: isDark ? 'rgba(255, 255, 255, 0.06)' : '#e2e8f0', textAlign: 'center' }}>
+                      <Typography variant="caption" sx={{ color: isDark ? '#94a3b8' : '#64748b', fontSize: '0.65rem', fontWeight: 700, display: 'block' }}>
+                        SLA URGENCY
+                      </Typography>
+                      <Chip
+                        size="small"
+                        label={activeWebhook.extracted.priority}
+                        sx={{
+                          mt: 0.5,
+                          fontWeight: 800,
+                          height: 22,
+                          fontSize: '0.72rem',
+                          backgroundColor: activeWebhook.extracted.priority === 'Urgent' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+                          color: activeWebhook.extracted.priority === 'Urgent' ? '#f87171' : '#fbbf24',
+                          border: activeWebhook.extracted.priority === 'Urgent' ? '1px solid #ef4444' : '1px solid #f59e0b',
+                        }}
+                      />
+                    </Box>
+                  </Grid>
+                </Grid>
+
+                {/* Key Entities Detected Cloud */}
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="caption" sx={{ color: '#8b5cf6', fontWeight: 800, textTransform: 'uppercase', display: 'block', mb: 0.8, fontSize: '0.7rem' }}>
+                    ✦ Semantic Named Entities Extracted:
+                  </Typography>
+                  <Stack direction="row" spacing={0.8} sx={{ flexWrap: 'wrap', gap: 0.8 }}>
+                    {activeWebhook.extracted.entities.map((entity, i) => (
+                      <Chip
+                        key={i}
+                        size="small"
+                        label={entity}
+                        sx={{
+                          backgroundColor: isDark ? 'rgba(139, 92, 246, 0.14)' : '#f5f3ff',
+                          color: isDark ? '#c084fc' : '#6d28d9',
+                          border: isDark ? '1px solid rgba(139, 92, 246, 0.35)' : '1px solid #ddd6fe',
+                          fontWeight: 600,
+                          fontSize: '0.72rem',
+                          height: 22,
+                        }}
+                      />
+                    ))}
+                  </Stack>
+                </Box>
+
+                {/* Urgency Justification Box */}
+                <Box
+                  sx={{
+                    p: 1.5,
+                    borderRadius: 2,
+                    backgroundColor: isDark ? 'rgba(37, 99, 235, 0.1)' : '#eff6ff',
+                    border: isDark ? '1px solid rgba(59, 130, 246, 0.25)' : '1px solid #bfdbfe',
+                    mb: 2,
+                  }}
+                >
+                  <Typography variant="caption" sx={{ color: isDark ? '#93c5fd' : '#1d4ed8', fontWeight: 800, textTransform: 'uppercase', display: 'block', mb: 0.4 }}>
+                    Defensible SLA Urgency Reasoning:
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: isDark ? '#dbeafe' : '#1e3a8a', fontSize: '0.8rem', lineHeight: 1.5 }}>
+                    {activeWebhook.extracted.priorityReason}
+                  </Typography>
+                </Box>
+
+                {/* Executive Summary */}
+                <Box sx={{ mb: 2, flexGrow: 1 }}>
+                  <Typography variant="caption" sx={{ color: isDark ? '#94a3b8' : '#64748b', fontWeight: 700, textTransform: 'uppercase', display: 'block', mb: 0.4 }}>
+                    Executive Briefing:
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: 'text.primary', fontSize: '0.84rem', lineHeight: 1.55 }}>
+                    {activeWebhook.extracted.triageSummary}
+                  </Typography>
+                </Box>
+
+                {/* Action Controls */}
+                <Box sx={{ mt: 'auto', pt: 1.5, borderTop: isDark ? '1px solid rgba(255, 255, 255, 0.06)' : '1px solid #f1f5f9' }}>
+                  <Button
+                    variant="contained"
+                    fullWidth
+                    size="medium"
+                    onClick={() => handleTransferToStudio(activeWebhook)}
+                    endIcon={<ArrowForwardIcon />}
+                    sx={{
+                      py: 1.2,
+                      borderRadius: 2.2,
+                      textTransform: 'none',
+                      fontWeight: 800,
+                      fontSize: '0.9rem',
+                      background: 'linear-gradient(135deg, #ec4899 0%, #8b5cf6 50%, #3b82f6 100%)',
+                      boxShadow: '0 4px 18px rgba(139, 92, 246, 0.4)',
+                      transition: 'all 0.25s ease',
+                      '&:hover': {
+                        transform: 'translateY(-1px)',
+                        boxShadow: '0 6px 22px rgba(236, 72, 153, 0.55)',
+                      },
+                    }}
+                  >
+                    ⚡ Transfer to Live AI Triage Studio →
+                  </Button>
+                </Box>
+              </Paper>
+            </Grid>
+          </Grid>
         </DialogContent>
       </Dialog>
     </Box>

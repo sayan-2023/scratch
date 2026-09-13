@@ -1,7 +1,9 @@
 import pytest
+from unittest.mock import MagicMock
 from fastapi.testclient import TestClient
 from app.main import app
 from app.models import CategoryEnum, PriorityEnum, OwnerEnum, TriageOutput
+from app.auth_service import _load_reset_tokens
 
 client = TestClient(app)
 
@@ -78,10 +80,29 @@ def test_forgot_and_reset_password_flow():
     # 1. Request reset code
     res = client.post("/api/auth/forgot-password", json={"email": email})
     assert res.status_code == 200
-    code = res.json()["code"]
+    assert "code" not in res.json()  # Verification code must NEVER be exposed in API preview
+
+    # Retrieve code from secure backend token storage (which was dispatched to email)
+    tokens = _load_reset_tokens()
+    code = tokens[email.lower()]["code"]
     assert len(code) == 6
 
-    # 2. Reset password
+    # 2. Verify invalid code fails
+    bad_verify = client.post(
+        "/api/auth/verify-code",
+        json={"email": email, "reset_code": "000000"},
+    )
+    assert bad_verify.status_code == 400
+
+    # 3. Verify valid code succeeds
+    good_verify = client.post(
+        "/api/auth/verify-code",
+        json={"email": email, "reset_code": code},
+    )
+    assert good_verify.status_code == 200
+    assert good_verify.json()["success"] is True
+
+    # 4. Reset password
     reset_res = client.post(
         "/api/auth/reset-password",
         json={
@@ -253,4 +274,53 @@ def test_email_config_endpoints_persistence():
     assert get_res.status_code == 200
     accounts = get_res.json()["configured_accounts"]
     assert any(a["email"] == "auto_test_dispatcher@gmail.com" for a in accounts)
+
+    # Clean up so test accounts don't leak into runtime
+    client.post("/api/email/config", json={"accounts": []})
+
+
+def test_forgot_password_live_smtp_delivery(monkeypatch):
+    """Verifies that forgot-password delivers verification code via live SMTP without leaking code in response."""
+    import smtplib
+    mock_server = MagicMock()
+    monkeypatch.setattr(smtplib, "SMTP", lambda host, port, timeout: mock_server)
+
+    import uuid
+    email = f"reset_live_{uuid.uuid4().hex[:6]}@example.com"
+    # Pre-register user
+    reg_res = client.post("/api/auth/register", json={
+        "name": "Live Reset User",
+        "email": email,
+        "password": "Password123!",
+    })
+    assert reg_res.status_code == 201
+
+    payload = {
+        "email": email,
+        "accounts": [
+            {
+                "email": "dispatcher@gmail.com",
+                "app_password": "abcdefghijklmnop",
+                "department": "Default",
+                "is_default": True,
+            }
+        ],
+    }
+
+    res = client.post("/api/auth/forgot-password", json=payload)
+    assert res.status_code == 200
+    data = res.json()
+
+    # CRITICAL: code must NOT be shown in API response preview
+    assert "code" not in data
+    assert data["success"] is True
+    assert data["email_status"]["is_simulation"] is False
+    assert data["email_status"]["sent_from"] == "dispatcher@gmail.com"
+    assert email in data["email_status"]["sent_to"]
+
+    # Verify SMTP handshake, authentication, and message delivery
+    mock_server.login.assert_called_with("dispatcher@gmail.com", "abcdefghijklmnop")
+    mock_server.send_message.assert_called()
+    mock_server.quit.assert_called()
+
 

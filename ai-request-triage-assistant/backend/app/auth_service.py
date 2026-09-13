@@ -19,6 +19,7 @@ from app.models import (
 from app.email_service import (
     send_email_message,
     send_welcome_email_message,
+    send_password_reset_email_message,
     get_env_accounts,
 )
 
@@ -205,6 +206,26 @@ def generate_reset_code(email: str) -> str:
     }
     _save_reset_tokens(tokens)
     return code
+
+
+def verify_reset_code(email: str, reset_code: str) -> bool:
+    """Verifies that the reset code is valid and active without consuming it."""
+    clean_email = email.strip().lower()
+    tokens = _load_reset_tokens()
+    record = tokens.get(clean_email)
+    if not record:
+        raise ValueError("No active password reset request found. Please request a new code.")
+
+    if record.get("code") != reset_code.strip():
+        raise ValueError("Invalid verification code. Please check your email and try again.")
+
+    expires_at = datetime.fromisoformat(record["expires_at"])
+    if datetime.now() > expires_at:
+        del tokens[clean_email]
+        _save_reset_tokens(tokens)
+        raise ValueError("Verification code has expired. Please request a new one.")
+
+    return True
 
 
 def verify_and_reset_password(email: str, reset_code: str, new_password: str) -> bool:
@@ -403,47 +424,12 @@ def send_password_reset_email(
     code: str,
     accounts: Optional[List[EmailAccount]] = None,
 ) -> Dict[str, Any]:
-    """Sends a password reset verification code email."""
-    subject = "Your Password Reset Code - AI Request Triage Assistant"
-    body = (
-        f"Hello {user_name},\n\n"
-        f"We received a request to reset your password for AI Request Triage Assistant.\n\n"
-        f"Your 6-digit verification code is:\n\n"
-        f"    >> {code} <<\n\n"
-        f"This code will expire in 30 minutes. Enter this code on the password reset screen to set a new password.\n\n"
-        f"If you did not request this change, please ignore this email.\n\n"
-        f"Best regards,\n"
-        f"Security Team | AI Request Triage Assistant\n"
+    """Dispatches a password reset verification code email via live SMTP or simulation."""
+    return send_password_reset_email_message(
+        to_email=user_email,
+        user_name=user_name,
+        code=code,
+        accounts=accounts,
     )
 
-    env_accs = get_env_accounts()
-    client_accs = accounts or []
-    all_accs = client_accs + [a for a in env_accs if not any(c.email.lower() == a.email.lower() for c in client_accs)]
-    has_live_sender = any(bool(a.app_password and a.app_password.strip()) for a in all_accs)
-
-    try:
-        payload = SendEmailRequest(
-            to_emails=[user_email],
-            subject=subject,
-            body=body,
-            assigned_owner="Operations",
-            accounts=all_accs,
-            simulate=not has_live_sender,
-        )
-        res = send_email_message(payload)
-        logger.info(f"Dispatched password reset email to {user_email} (live={not payload.simulate})")
-        return {
-            "success": True,
-            "is_simulation": payload.simulate,
-            "sent_from": res.sent_from,
-            "message": res.message,
-        }
-    except Exception as exc:
-        logger.warning(f"Could not dispatch password reset email: {exc}")
-        return {
-            "success": True,
-            "is_simulation": True,
-            "error": str(exc),
-            "message": f"Password reset email queued (SMTP offline: {exc})",
-        }
 

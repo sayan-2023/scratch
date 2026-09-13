@@ -28,6 +28,7 @@ from app.models import (
     RegisterRequest,
     GoogleAuthRequest,
     ForgotPasswordRequest,
+    VerifyResetCodeRequest,
     ResetPasswordRequest,
     AuthResponse,
     SaveEmailConfigRequest,
@@ -60,6 +61,7 @@ from app.auth_service import (
     register_user,
     authenticate_google_user,
     generate_reset_code,
+    verify_reset_code,
     verify_and_reset_password,
     get_user_history,
     save_user_history_item,
@@ -553,16 +555,33 @@ def forgot_password_endpoint(payload: ForgotPasswordRequest):
     try:
         user = get_user_by_email_or_id(payload.email)
         code = generate_reset_code(payload.email)
+        email_status = None
         if user:
-            send_password_reset_email(user.email, user.name, code)
+            email_status = send_password_reset_email(user.email, user.name, code, payload.accounts)
         return {
             "success": True,
             "message": f"A 6-digit verification code has been dispatched to {payload.email}.",
-            "code": code,  # Included for seamless testing/demonstration without active SMTP
+            "email_status": email_status,
         }
     except ValueError as val_err:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(val_err),
+        )
+
+
+@app.post("/api/auth/verify-code", tags=["Authentication"])
+def verify_code_endpoint(payload: VerifyResetCodeRequest):
+    """Verifies that the provided 6-digit verification code is valid for the email account."""
+    try:
+        verify_reset_code(payload.email, payload.reset_code)
+        return {
+            "success": True,
+            "message": "Verification code confirmed successfully! You may now enter your new password.",
+        }
+    except ValueError as val_err:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(val_err),
         )
 

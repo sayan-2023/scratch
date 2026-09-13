@@ -50,6 +50,8 @@ export default function AuthModal({
   const [confirmPassword, setConfirmPassword] = useState('');
   const [resetCode, setResetCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [isCodeVerified, setIsCodeVerified] = useState(false);
+  const [verifyingCode, setVerifyingCode] = useState(false);
 
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -61,6 +63,10 @@ export default function AuthModal({
     setSuccessMsg('');
     setIsForgotPassword(false);
     setResetStep(1);
+    setIsCodeVerified(false);
+    setVerifyingCode(false);
+    setResetCode('');
+    setNewPassword('');
     setGooglePromptOpen(false);
     onClose();
   };
@@ -238,12 +244,17 @@ export default function AuthModal({
     setLoading(true);
     setErrorMsg('');
     setSuccessMsg('');
+    setIsCodeVerified(false);
+    setResetCode('');
 
     try {
       const res = await fetch('/api/auth/forgot-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim() }),
+        body: JSON.stringify({
+          email: email.trim(),
+          accounts: emailAccounts && emailAccounts.length > 0 ? emailAccounts : undefined,
+        }),
       });
 
       const data = await res.json();
@@ -251,8 +262,13 @@ export default function AuthModal({
         throw new Error(data.detail || 'Could not send verification code.');
       }
 
-      setResetCode(data.code || ''); // Autofill code for smooth demo experience
-      setSuccessMsg(`Verification code sent! (Code: ${data.code})`);
+      // DO NOT autofill code into input box: user must check email and type it in
+      setResetCode('');
+      let msg = data.message || `A 6-digit verification code has been dispatched to ${email.trim()}! Please check your email.`;
+      if (data.email_status?.is_simulation) {
+        msg += ' (Safe demo mode: configure a Gmail App Password in Configure Gmail to receive live emails in your personal inbox).';
+      }
+      setSuccessMsg(msg);
       setResetStep(2);
     } catch (err) {
       setErrorMsg(err.message);
@@ -261,11 +277,51 @@ export default function AuthModal({
     }
   };
 
+  // Handle Verify Code
+  const handleVerifyCode = async () => {
+    if (!resetCode.trim()) {
+      setErrorMsg('Please enter the 6-digit verification code sent to your email.');
+      return;
+    }
+
+    setVerifyingCode(true);
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    try {
+      const res = await fetch('/api/auth/verify-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email.trim(),
+          reset_code: resetCode.trim(),
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.detail || 'Invalid verification code. Please check your email or request a new code.');
+      }
+
+      setIsCodeVerified(true);
+      setSuccessMsg(data.message || 'Verification code confirmed! You may now set your new password.');
+    } catch (err) {
+      setIsCodeVerified(false);
+      setErrorMsg(err.message);
+    } finally {
+      setVerifyingCode(false);
+    }
+  };
+
   // Handle Confirm Reset Password
   const handleConfirmReset = async (e) => {
     if (e) e.preventDefault();
+    if (!isCodeVerified) {
+      setErrorMsg('Please verify the verification code first by clicking "Verify Code".');
+      return;
+    }
     if (!resetCode.trim() || !newPassword.trim()) {
-      setErrorMsg('Please enter the verification code and your new password.');
+      setErrorMsg('Please enter your new password.');
       return;
     }
     if (newPassword.length < 6) {
@@ -297,6 +353,8 @@ export default function AuthModal({
       setTimeout(() => {
         setIsForgotPassword(false);
         setResetStep(1);
+        setIsCodeVerified(false);
+        setResetCode('');
         setPassword(newPassword);
         setTab(0);
       }, 1200);
@@ -344,6 +402,9 @@ export default function AuthModal({
               onClick={() => {
                 setIsForgotPassword(false);
                 setResetStep(1);
+                setIsCodeVerified(false);
+                setResetCode('');
+                setNewPassword('');
                 setErrorMsg('');
                 setSuccessMsg('');
               }}
@@ -380,45 +441,121 @@ export default function AuthModal({
             ) : (
               <Box component="form" onSubmit={handleConfirmReset}>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  Enter the 6-digit code sent to <strong>{email}</strong> and your new password:
+                  Enter the 6-digit code sent to <strong>{email}</strong>:
                 </Typography>
-                <TextField
-                  label="6-Digit Verification Code"
-                  fullWidth
-                  size="small"
-                  value={resetCode}
-                  onChange={(e) => setResetCode(e.target.value)}
-                  disabled={loading}
-                  sx={{ mb: 2 }}
-                />
-                <TextField
-                  label="New Password"
-                  type={showPassword ? 'text' : 'password'}
-                  fullWidth
-                  size="small"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  disabled={loading}
-                  sx={{ mb: 2 }}
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton size="small" onClick={() => setShowPassword(!showPassword)}>
-                          {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-                <Button
-                  type="submit"
-                  variant="contained"
-                  fullWidth
-                  disabled={loading}
-                  startIcon={loading ? <CircularProgress size={16} color="inherit" /> : <LockOutlinedIcon />}
-                >
-                  {loading ? 'Updating Password...' : 'Confirm New Password'}
-                </Button>
+
+                {/* 6-Digit Code Input with adjacent Verify Code button */}
+                <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start', mb: 2 }}>
+                  <TextField
+                    label="6-Digit Verification Code"
+                    size="small"
+                    fullWidth
+                    value={resetCode}
+                    onChange={(e) => {
+                      setResetCode(e.target.value.trim());
+                      if (isCodeVerified) setIsCodeVerified(false);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (!isCodeVerified && resetCode.trim()) {
+                          handleVerifyCode();
+                        }
+                      }
+                    }}
+                    disabled={loading || verifyingCode}
+                    placeholder="e.g. 123456"
+                    inputProps={{ maxLength: 10 }}
+                    helperText={
+                      isCodeVerified
+                        ? '✓ Code verified successfully'
+                        : 'Type the 6-digit code from your email and click Verify'
+                    }
+                    FormHelperTextProps={{
+                      sx: {
+                        color: isCodeVerified ? 'success.main' : 'text.secondary',
+                        fontWeight: isCodeVerified ? 600 : 400,
+                      },
+                    }}
+                  />
+                  <Button
+                    variant={isCodeVerified ? 'contained' : 'outlined'}
+                    color={isCodeVerified ? 'success' : 'primary'}
+                    onClick={handleVerifyCode}
+                    disabled={loading || verifyingCode || isCodeVerified || !resetCode.trim()}
+                    sx={{
+                      height: 40,
+                      whiteSpace: 'nowrap',
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      minWidth: '115px',
+                    }}
+                    startIcon={
+                      verifyingCode ? (
+                        <CircularProgress size={16} color="inherit" />
+                      ) : isCodeVerified ? (
+                        <CheckCircleIcon />
+                      ) : (
+                        <VpnKeyIcon />
+                      )
+                    }
+                  >
+                    {isCodeVerified ? 'Verified' : verifyingCode ? 'Verifying...' : 'Verify Code'}
+                  </Button>
+                </Box>
+
+                {/* Only display and enable password fields once code is verified */}
+                {isCodeVerified ? (
+                  <Box sx={{ mt: 1 }}>
+                    <Alert severity="success" sx={{ mb: 2, fontSize: '0.82rem' }}>
+                      Verification code confirmed! You can now set your new password below.
+                    </Alert>
+                    <TextField
+                      label="New Password"
+                      type={showPassword ? 'text' : 'password'}
+                      fullWidth
+                      size="small"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      disabled={loading}
+                      sx={{ mb: 2 }}
+                      placeholder="At least 6 characters"
+                      InputProps={{
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton size="small" onClick={() => setShowPassword(!showPassword)}>
+                              {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      fullWidth
+                      disabled={loading || !newPassword.trim()}
+                      startIcon={loading ? <CircularProgress size={16} color="inherit" /> : <LockOutlinedIcon />}
+                    >
+                      {loading ? 'Updating Password...' : 'Confirm New Password'}
+                    </Button>
+                  </Box>
+                ) : (
+                  <Paper
+                    variant="outlined"
+                    sx={{
+                      p: 2,
+                      bgcolor: '#f8fafc',
+                      borderColor: '#e2e8f0',
+                      borderRadius: 2,
+                      textAlign: 'center',
+                    }}
+                  >
+                    <Typography variant="body2" color="text.secondary">
+                      Please enter the verification code sent to your email and click <strong>Verify Code</strong> beside the text box to unlock password reset.
+                    </Typography>
+                  </Paper>
+                )}
               </Box>
             )}
           </Box>
@@ -539,6 +676,10 @@ export default function AuthModal({
                     size="small"
                     onClick={() => {
                       setIsForgotPassword(true);
+                      setResetStep(1);
+                      setIsCodeVerified(false);
+                      setResetCode('');
+                      setNewPassword('');
                       setErrorMsg('');
                       setSuccessMsg('');
                     }}

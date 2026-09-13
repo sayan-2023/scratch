@@ -587,3 +587,159 @@ def send_welcome_email_message(
         "message": f"Welcome email simulated for {to_email}. (To receive live emails in your inbox, add a Gmail App Password in Configure Gmail).",
     }
 
+
+def build_password_reset_mime_message(
+    sender_account: EmailAccount,
+    to_email: str,
+    user_name: str,
+    code: str,
+) -> MIMEMultipart:
+    """Builds a rich, styled HTML and plain-text password reset verification email."""
+    msg = MIMEMultipart("alternative")
+    display_name = sender_account.display_name or "AI Request Triage Security"
+    msg["From"] = f'"{display_name}" <{sender_account.email}>'
+    msg["To"] = to_email
+    msg["Subject"] = "Your Password Reset Verification Code - AI Request Triage Assistant"
+    msg["Date"] = formatdate(localtime=True)
+    msg["Message-ID"] = make_msgid(domain="triage.assistant")
+
+    plain_text = (
+        f"Hello {user_name},\n\n"
+        f"We received a request to reset the password for your AI Request Triage Assistant account ({to_email}).\n\n"
+        f"Your 6-digit verification code is:\n\n"
+        f"    >> {code} <<\n\n"
+        f"This code will expire in 30 minutes. Please enter this code on the password reset screen to set a new password.\n\n"
+        f"If you did not request a password reset, you can safely disregard this email. Your password will remain unchanged.\n\n"
+        f"Best regards,\n"
+        f"Security Team | AI Request Triage Assistant\n"
+    )
+
+    html_content = f"""<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b; background-color: #0f172a; padding: 24px 12px; margin: 0; }}
+  .container {{ max-width: 540px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }}
+  .header {{ background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #ffffff; padding: 28px 24px; text-align: center; }}
+  .header h1 {{ margin: 0 0 6px 0; font-size: 20px; font-weight: 800; letter-spacing: -0.01em; }}
+  .header p {{ margin: 0; font-size: 13px; opacity: 0.9; }}
+  .content {{ padding: 28px 24px; font-size: 14px; line-height: 1.6; color: #334155; }}
+  .greeting {{ font-size: 16px; font-weight: 700; color: #0f172a; margin-bottom: 14px; }}
+  .code-box {{ background: #f8fafc; border: 2px dashed #93c5fd; border-radius: 10px; padding: 20px; text-align: center; margin: 22px 0; }}
+  .code-title {{ font-size: 11px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.08em; color: #2563eb; margin-bottom: 8px; }}
+  .code-val {{ font-size: 34px; font-weight: 800; letter-spacing: 8px; color: #0f172a; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }}
+  .warning-box {{ background: #fffbeb; border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 4px; font-size: 13px; color: #92400e; margin: 20px 0; }}
+  .footer {{ padding: 18px 24px; background: #f1f5f9; font-size: 12px; color: #64748b; border-top: 1px solid #e2e8f0; text-align: center; }}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>Security Verification</h1>
+    <p>AI Request Triage Assistant</p>
+  </div>
+  <div class="content">
+    <div class="greeting">Hello {user_name},</div>
+    <p>We received a request to reset the password for your account (<strong>{to_email}</strong>). Use the verification code below to verify your identity and set a new password:</p>
+    
+    <div class="code-box">
+      <div class="code-title">Your 6-Digit Verification Code</div>
+      <div class="code-val">{code}</div>
+    </div>
+
+    <div class="warning-box">
+      <strong>Important:</strong> This verification code expires in 30 minutes. Do not share this code with anyone.
+    </div>
+
+    <p>If you did not request this password reset, please ignore this email. Your password will remain unchanged and your account is secure.</p>
+  </div>
+  <div class="footer">
+    Sent by <strong>AI Request Triage Assistant Security</strong> • Automated notification
+  </div>
+</div>
+</body>
+</html>"""
+
+    part_text = MIMEText(plain_text, "plain", "utf-8")
+    part_html = MIMEText(html_content, "html", "utf-8")
+    msg.attach(part_text)
+    msg.attach(part_html)
+    return msg
+
+
+def send_password_reset_email_message(
+    to_email: str,
+    user_name: str,
+    code: str,
+    accounts: Optional[List[EmailAccount]] = None,
+) -> Dict[str, Any]:
+    """
+    Transmits password reset verification code email.
+    Attempts live delivery via Gmail SMTP if any sender account with an App Password is provided/stored.
+    Falls back gracefully to simulation mode if no App Password exists or SMTP is unavailable.
+    """
+    env_accounts = get_env_accounts()
+    client_accounts = accounts or []
+    all_accounts = client_accounts + [a for a in env_accounts if not any(c.email.lower() == a.email.lower() for c in client_accounts)]
+
+    live_sender = None
+    for acc in all_accounts:
+        clean_pwd = clean_app_password(acc.app_password)
+        if acc.app_password and acc.app_password.strip() and not clean_pwd.lower().startswith("xxxx") and not acc.email.lower().startswith("auto_test_"):
+            live_sender = acc
+            break
+
+    now_iso = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    if live_sender:
+        clean_pwd = clean_app_password(live_sender.app_password)
+        msg = build_password_reset_mime_message(
+            sender_account=live_sender,
+            to_email=to_email,
+            user_name=user_name,
+            code=code,
+        )
+        try:
+            logger.info(f"Connecting to {GMAIL_SMTP_HOST}:{GMAIL_SMTP_PORT} to send reset code from {live_sender.email} to {to_email}...")
+            server = smtplib.SMTP(GMAIL_SMTP_HOST, GMAIL_SMTP_PORT, timeout=12)
+            server.ehlo()
+            server.starttls()
+            server.ehlo()
+            server.login(live_sender.email.strip(), clean_pwd)
+            server.send_message(msg)
+            server.quit()
+
+            logger.info(f"Live password reset code email delivered successfully to {to_email} via {live_sender.email}")
+            return {
+                "success": True,
+                "is_simulation": False,
+                "sent_to": [to_email],
+                "sent_from": live_sender.email,
+                "timestamp": now_iso,
+                "message": f"Verification code sent to {to_email} via live Gmail SMTP!",
+            }
+        except Exception as exc:
+            logger.warning(f"SMTP delivery of password reset code failed ({exc}). Falling back to simulation.", exc_info=True)
+            return {
+                "success": True,
+                "is_simulation": True,
+                "sent_to": [to_email],
+                "sent_from": live_sender.email,
+                "live_delivery_error": str(exc),
+                "timestamp": now_iso,
+                "message": f"Verification code simulated for {to_email} (SMTP offline: {exc}).",
+            }
+
+    fallback_sender = (all_accounts[0].email if all_accounts else "security@triage.ai")
+    logger.info(f"Simulating password reset email transmission to {to_email} via {fallback_sender}")
+    return {
+        "success": True,
+        "is_simulation": True,
+        "sent_to": [to_email],
+        "sent_from": fallback_sender,
+        "timestamp": now_iso,
+        "message": f"Verification code simulated for {to_email}. (To receive live emails in your inbox, add a Gmail App Password in Configure Gmail).",
+    }
+
+

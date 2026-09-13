@@ -275,6 +275,13 @@ class GoogleAuthRequest(BaseModel):
 class ForgotPasswordRequest(BaseModel):
     """Payload to initiate a password reset verification code."""
     email: str
+    accounts: Optional[List[EmailAccount]] = Field(default=None, description="Optional configured dispatcher accounts")
+
+
+class VerifyResetCodeRequest(BaseModel):
+    """Payload to verify 6-digit verification code before setting new password."""
+    email: str
+    reset_code: str
 
 
 class ResetPasswordRequest(BaseModel):

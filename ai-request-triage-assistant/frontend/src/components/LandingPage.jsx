@@ -425,10 +425,7 @@ export default function LandingPage({
             <Button
               variant="contained"
               size="large"
-              onClick={() => {
-                setAiStudioOpen(true);
-                handleRunStudioAnalysis(studioText);
-              }}
+              onClick={() => setAiStudioOpen(true)}
               startIcon={<AutoAwesomeIcon sx={{ color: '#fbcfe8' }} />}
               endIcon={<FlashOnIcon sx={{ color: '#fef08a' }} />}
               sx={{
@@ -736,7 +733,10 @@ export default function LandingPage({
       {/* AI TRIAGE STUDIO INTERACTIVE MODAL */}
       <Dialog
         open={aiStudioOpen}
-        onClose={() => setAiStudioOpen(false)}
+        onClose={() => {
+          setAiStudioOpen(false);
+          setStudioLoading(false);
+        }}
         maxWidth="md"
         fullWidth
         PaperProps={{
@@ -787,7 +787,10 @@ export default function LandingPage({
             </Box>
           </Box>
           <IconButton
-            onClick={() => setAiStudioOpen(false)}
+            onClick={() => {
+              setAiStudioOpen(false);
+              setStudioLoading(false);
+            }}
             sx={{
               color: '#94a3b8',
               '&:hover': { color: '#ffffff', backgroundColor: 'rgba(255, 255, 255, 0.08)' },
@@ -811,10 +814,7 @@ export default function LandingPage({
                     key={preset.id}
                     label={preset.title}
                     clickable
-                    onClick={() => {
-                      handleSelectPreset(preset);
-                      handleRunStudioAnalysis(preset.text);
-                    }}
+                    onClick={() => handleSelectPreset(preset)}
                     variant={isSelected ? 'filled' : 'outlined'}
                     sx={{
                       backgroundColor: isSelected ? 'rgba(139, 92, 246, 0.25)' : 'rgba(30, 41, 59, 0.5)',

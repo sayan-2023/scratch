@@ -1,0 +1,12 @@
+[
+  {
+    "id": "usr-admin-01",
+    "email": "admin@triage.ai",
+    "name": "Admin User",
+    "password_hash": "2a07c6239718fe9c5f422c1449f17ac8c74ab9dd93e342f2e7a6b3f523cbb274",
+    "role": "Admin",
+    "avatar_url": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&h=120&q=80",
+    "created_at": "2026-01-01 00:00:00"
+  }
+]
+

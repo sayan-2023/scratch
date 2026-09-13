@@ -27,9 +27,12 @@ from app.email_service import (
 
 logger = logging.getLogger("triage_backend.auth")
 
-DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+DATA_DIR = Path(os.getenv("DATA_DIR", Path(__file__).resolve().parent.parent / "data"))
+SEEDS_DIR = Path(__file__).resolve().parent.parent / "data" / "seeds"
 USERS_FILE = DATA_DIR / "users_store.json"
+USERS_SEED_FILE = SEEDS_DIR / "users_store.seed.json"
 HISTORY_FILE = DATA_DIR / "history_store.json"
+HISTORY_SEED_FILE = SEEDS_DIR / "history_store.seed.json"
 RESET_TOKENS_FILE = DATA_DIR / "reset_tokens.json"
 
 SALT = "triage-assistant-secure-salt-2026"
@@ -69,9 +72,18 @@ DEFAULT_ADMIN_USER = User(
 
 
 def load_users() -> List[User]:
-    """Loads all registered users, initializing default admin if missing."""
+    """Loads all registered users, initializing from seeds/defaults if missing."""
     _ensure_data_dir()
     if not USERS_FILE.exists():
+        if USERS_SEED_FILE.exists():
+            try:
+                with open(USERS_SEED_FILE, "r", encoding="utf-8") as f:
+                    seed_data = json.load(f)
+                    users = [User(**item) for item in seed_data]
+                    save_users(users)
+                    return users
+            except Exception as err:
+                logger.warning(f"Could not load users seed: {err}")
         save_users([DEFAULT_ADMIN_USER])
         return [DEFAULT_ADMIN_USER]
 
@@ -330,6 +342,14 @@ def verify_and_reset_password(email: str, reset_code: str, new_password: str) ->
 def _load_history_store() -> Dict[str, list]:
     _ensure_data_dir()
     if not HISTORY_FILE.exists():
+        if HISTORY_SEED_FILE.exists():
+            try:
+                with open(HISTORY_SEED_FILE, "r", encoding="utf-8") as f:
+                    seed_data = json.load(f)
+                    _save_history_store(seed_data)
+                    return seed_data
+            except Exception as err:
+                logger.warning(f"Could not load history seed: {err}")
         return {}
     try:
         with open(HISTORY_FILE, "r", encoding="utf-8") as f:

@@ -93,9 +93,12 @@ DEFAULT_MOCK_REQUESTS: List[SampleRequest] = [
 ]
 
 # File paths for dynamic persistence
-DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+DATA_DIR = Path(os.getenv("DATA_DIR", Path(__file__).resolve().parent.parent / "data"))
+SEEDS_DIR = Path(__file__).resolve().parent.parent / "data" / "seeds"
 SAMPLES_FILE = DATA_DIR / "samples_store.json"
+SAMPLES_SEED_FILE = SEEDS_DIR / "samples_store.seed.json"
 INBOX_FILE = DATA_DIR / "inbox_store.json"
+INBOX_SEED_FILE = SEEDS_DIR / "inbox_store.seed.json"
 
 
 def _ensure_data_dir():
@@ -111,6 +114,15 @@ def get_all_samples() -> List[SampleRequest]:
     """Retrieves all sample requests from the persistent store, initializing with defaults if missing."""
     _ensure_data_dir()
     if not SAMPLES_FILE.exists():
+        if SAMPLES_SEED_FILE.exists():
+            try:
+                with open(SAMPLES_SEED_FILE, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    samples = [SampleRequest(**item) for item in data]
+                    _save_samples(samples)
+                    return samples
+            except Exception:
+                pass
         reset_samples_to_default()
         return DEFAULT_MOCK_REQUESTS
 
@@ -264,6 +276,15 @@ def get_all_inbox_messages() -> List[InboxMessage]:
     """Retrieves all inbound webhook / live feed messages."""
     _ensure_data_dir()
     if not INBOX_FILE.exists():
+        if INBOX_SEED_FILE.exists():
+            try:
+                with open(INBOX_SEED_FILE, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    messages = [InboxMessage(**item) for item in data]
+                    _save_inbox(messages)
+                    return messages
+            except Exception:
+                pass
         _save_inbox(DEFAULT_INBOX_MESSAGES)
         return DEFAULT_INBOX_MESSAGES
 

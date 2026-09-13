@@ -37,3 +37,9 @@ Thumbs.db
 .vscode/
 .idea/
 
+# Local runtime dynamic data (credentials, active sessions, and reset tokens)
+backend/data/*.json
+**/backend/data/*.json
+!**/backend/data/seeds/*.json
+!**/backend/data/.gitkeep
+

@@ -16,8 +16,10 @@ from app.models import EmailAccount, SendEmailRequest, SendEmailResponse
 
 logger = logging.getLogger("triage_backend.email")
 
-DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+DATA_DIR = Path(os.getenv("DATA_DIR", Path(__file__).resolve().parent.parent / "data"))
+SEEDS_DIR = Path(__file__).resolve().parent.parent / "data" / "seeds"
 EMAIL_CONFIG_FILE = DATA_DIR / "email_config.json"
+EMAIL_SEED_FILE = SEEDS_DIR / "email_config.seed.json"
 
 GMAIL_SMTP_HOST = "smtp.gmail.com"
 GMAIL_SMTP_PORT = 587
@@ -28,6 +30,14 @@ def load_stored_email_accounts() -> List[EmailAccount]:
     """Loads dispatcher accounts saved in backend/data/email_config.json."""
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     if not EMAIL_CONFIG_FILE.exists():
+        if EMAIL_SEED_FILE.exists():
+            try:
+                with open(EMAIL_SEED_FILE, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    if isinstance(data, list) and len(data) > 0:
+                        return [EmailAccount(**item) for item in data]
+            except Exception:
+                pass
         return []
     try:
         with open(EMAIL_CONFIG_FILE, "r", encoding="utf-8") as f:

@@ -1,0 +1,32 @@
+{
+  "usr-admin-01": [
+    {
+      "id": "hist-seed-01",
+      "user_id": "usr-admin-01",
+      "text": "URGENT: Our production SSO login portal has been completely unresponsive since 9:00 AM EST. None of our 120 employees can log in, and our monthly payroll processing is completely halted. We are seeing 504 Gateway Timeouts.",
+      "result": {
+        "summary": "Production SSO login portal outage with 504 Gateway Timeouts impacting 120 employees and blocking monthly payroll operations.",
+        "category": "Technical",
+        "priority": "Urgent",
+        "priority_reason": "High-impact outage completely preventing 120 employees from logging into critical payroll systems.",
+        "assigned_owner": "Engineering",
+        "draft_response": "Dear Marcus,\n\nOur engineering on-call team has been paged and is currently investigating the 504 Gateway Timeouts on the production SSO portal. We understand the urgency regarding your monthly payroll processing and will provide an update within 15 minutes.\n\nBest regards,\nApex Engineering Support",
+        "processing_time_ms": 340.5,
+        "sentiment_label": "Negative",
+        "sentiment_score": -0.85,
+        "churn_risk": "High",
+        "key_entities": [
+          "SSO Login Portal",
+          "504 Gateway Timeout",
+          "120 employees",
+          "Payroll processing"
+        ],
+        "suggested_questions": [
+          "Are API calls failing or only web browser logins?",
+          "Are all identity provider SAML endpoints affected?"
+        ]
+      },
+      "timestamp": "2026-09-13 10:30:00"
+    }
+  ]
+}

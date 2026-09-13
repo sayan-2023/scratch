@@ -1,0 +1,36 @@
+[
+  {
+    "id": "seed-stripe-01",
+    "source": "Stripe Webhook",
+    "sender": "notifications@stripe.com (re: Dispute dp_9104)",
+    "channel": "Payment Webhook",
+    "subject": "Chargeback Warning: Account Disputed $3,800.00",
+    "body": "Notification from Stripe: Dispute dp_9104 has been raised by cardholder for $3,800.00. Reason: Unrecognized transaction. Please provide invoice proof and service fulfillment logs before Friday 5:00 PM EST to prevent automatic forfeiture.",
+    "timestamp": "2026-09-13 12:00:00",
+    "status": "pending",
+    "triage_result": null
+  },
+  {
+    "id": "seed-zendesk-01",
+    "source": "Zendesk P1",
+    "sender": "ops-lead@partner.com (Ticket #8821)",
+    "channel": "API Webhook",
+    "subject": "Critical Incident: EU-Central Database Shard Read Errors",
+    "body": "Zendesk Incident alert triggered: High latency (>4500ms) on EU production shard. 1,400 active enterprise user sessions disconnected in Frankfurt cluster. Immediate level-3 DevOps triage requested.",
+    "timestamp": "2026-09-13 12:05:00",
+    "status": "pending",
+    "triage_result": null
+  },
+  {
+    "id": "seed-contact-01",
+    "source": "Enterprise Form",
+    "sender": "david.k@enterprise-retail.com",
+    "channel": "Inbound Contact Form",
+    "subject": "Enterprise Evaluation & Custom Architecture Review",
+    "body": "Hi, We are looking to replace our legacy customer triage system with an LLM-powered solution. We handle roughly 8,000 customer inquiries per day. Could we set up a discovery call with your solutions engineering team this Thursday or Friday?",
+    "timestamp": "2026-09-13 12:10:00",
+    "status": "pending",
+    "triage_result": null
+  }
+]
+

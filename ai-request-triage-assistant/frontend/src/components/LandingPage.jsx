@@ -546,21 +546,6 @@ export default function LandingPage({
           <Typography variant="body1" sx={{ color: '#94a3b8', mb: 4 }}>
             Sign in with the pre-configured admin account to test automated triage, Gmail dispatch, dynamic scenario generation, and webhook feeds.
           </Typography>
-          <Button
-            variant="contained"
-            size="large"
-            onClick={currentUser ? onLaunchWorkspace : onOpenAuthModal}
-            sx={{
-              py: 1.5,
-              px: 4,
-              fontSize: '1rem',
-              fontWeight: 700,
-              borderRadius: 2.5,
-              background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
-            }}
-          >
-            {currentUser ? 'Go to Workspace' : 'Sign In as Admin'}
-          </Button>
           <Typography variant="caption" sx={{ display: 'block', mt: 4, color: '#64748b' }}>
             © 2026 AI Request Triage Assistant • Built for Node Solutions / Stage Two Challenge
           </Typography>

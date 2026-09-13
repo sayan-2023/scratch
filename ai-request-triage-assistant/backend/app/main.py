@@ -30,6 +30,7 @@ from app.models import (
     ForgotPasswordRequest,
     ResetPasswordRequest,
     AuthResponse,
+    SaveEmailConfigRequest,
     UserHistoryItem,
     SaveHistoryRequest,
 )
@@ -52,6 +53,7 @@ from app.email_service import (
     send_email_message,
     test_gmail_smtp,
     get_env_accounts,
+    save_stored_email_accounts,
 )
 from app.auth_service import (
     authenticate_user,
@@ -63,6 +65,7 @@ from app.auth_service import (
     save_user_history_item,
     clear_user_history,
     send_login_notification_email,
+    send_welcome_email,
     send_password_reset_email,
     get_user_by_email_or_id,
 )
@@ -393,6 +396,26 @@ def get_email_config():
     return {"configured_accounts": safe_accounts}
 
 
+@app.post("/api/email/config", tags=["Email"])
+def save_email_config_endpoint(payload: SaveEmailConfigRequest):
+    """Persists server-side configured Gmail dispatcher accounts."""
+    save_stored_email_accounts(payload.accounts)
+    return {
+        "success": True,
+        "message": f"Successfully saved {len(payload.accounts)} Gmail accounts to server storage.",
+        "configured_accounts": [
+            {
+                "email": acc.email,
+                "department": acc.department,
+                "display_name": acc.display_name,
+                "is_default": acc.is_default,
+                "has_app_password": bool(acc.app_password),
+            }
+            for acc in payload.accounts
+        ],
+    }
+
+
 # ==============================================================================
 # Authentication & User Management Endpoints
 # ==============================================================================
@@ -407,8 +430,8 @@ def login_endpoint(payload: LoginRequest):
             detail="Invalid email/user ID or password. Please check your credentials.",
         )
 
-    # Dispatch security notification / welcome email
-    send_login_notification_email(user.email, user.name, "Password")
+    # Dispatch security notification email
+    email_status = send_login_notification_email(user.email, user.name, "Password")
 
     token = f"tok-{uuid.uuid4().hex}"
     public_user = UserPublic(
@@ -424,6 +447,8 @@ def login_endpoint(payload: LoginRequest):
         token=token,
         user=public_user,
         message=f"Welcome back, {user.name}! A security confirmation has been dispatched to {user.email}.",
+        is_new_user=False,
+        email_status=email_status,
     )
 
 
@@ -438,7 +463,17 @@ def register_endpoint(payload: RegisterRequest):
             detail=str(val_err),
         )
 
-    send_login_notification_email(user.email, user.name, "New Registration")
+    # Persist accounts if client provided them
+    if payload.accounts:
+        save_stored_email_accounts(payload.accounts)
+
+    # Send dedicated Welcome Email to new user
+    email_status = send_welcome_email(
+        user_email=user.email,
+        user_name=user.name,
+        signup_method="Email & Password",
+        accounts=payload.accounts,
+    )
 
     token = f"tok-{uuid.uuid4().hex}"
     public_user = UserPublic(
@@ -449,25 +484,49 @@ def register_endpoint(payload: RegisterRequest):
         avatar_url=user.avatar_url,
         created_at=user.created_at,
     )
+    email_note = f" Welcome email dispatched to {user.email}." if email_status.get("success") else ""
     return AuthResponse(
         success=True,
         token=token,
         user=public_user,
-        message=f"Account created successfully! Welcome to AI Request Triage, {user.name}.",
+        message=f"Account created successfully! Welcome to AI Request Triage, {user.name}.{email_note}",
+        is_new_user=True,
+        email_status=email_status,
     )
 
 
 @app.post("/api/auth/google", response_model=AuthResponse, tags=["Authentication"])
 def google_auth_endpoint(payload: GoogleAuthRequest):
-    """Authenticates via Google OAuth / Gmail sign-in with automatic account resolution."""
-    user = authenticate_google_user(
+    """Authenticates via Google OAuth / Gmail sign-in with automatic account resolution and welcome email."""
+    # Persist accounts if client provided them
+    if payload.accounts:
+        save_stored_email_accounts(payload.accounts)
+
+    user, is_new = authenticate_google_user(
         email=payload.email,
         name=payload.name,
         avatar_url=payload.avatar_url,
         google_id=payload.google_id,
     )
 
-    send_login_notification_email(user.email, user.name, "Google OAuth")
+    if is_new:
+        # First-time user signup with OAuth: send rich welcome email!
+        email_status = send_welcome_email(
+            user_email=user.email,
+            user_name=user.name,
+            signup_method="Google OAuth",
+            accounts=payload.accounts,
+        )
+        msg = f"Signed up via Google as {user.name} ({user.email}). Welcome email dispatched to your inbox!"
+    else:
+        # Returning user login: send login security notice
+        email_status = send_login_notification_email(
+            user_email=user.email,
+            user_name=user.name,
+            auth_method="Google OAuth",
+            accounts=payload.accounts,
+        )
+        msg = f"Signed in via Google as {user.name} ({user.email})."
 
     token = f"tok-g-{uuid.uuid4().hex}"
     public_user = UserPublic(
@@ -482,7 +541,9 @@ def google_auth_endpoint(payload: GoogleAuthRequest):
         success=True,
         token=token,
         user=public_user,
-        message=f"Signed in via Google as {user.name} ({user.email}).",
+        message=msg,
+        is_new_user=is_new,
+        email_status=email_status,
     )
 
 

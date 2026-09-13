@@ -260,6 +260,7 @@ class RegisterRequest(BaseModel):
     name: str = Field(..., min_length=2, description="Full name or team handle")
     email: str = Field(..., min_length=5, description="Corporate email address")
     password: str = Field(..., min_length=6, description="Account password (min 6 characters)")
+    accounts: Optional[List[EmailAccount]] = Field(default=None, description="Optional configured dispatcher accounts")
 
 
 class GoogleAuthRequest(BaseModel):
@@ -268,6 +269,7 @@ class GoogleAuthRequest(BaseModel):
     name: str
     google_id: Optional[str] = None
     avatar_url: Optional[str] = None
+    accounts: Optional[List[EmailAccount]] = Field(default=None, description="Optional configured dispatcher accounts")
 
 
 class ForgotPasswordRequest(BaseModel):
@@ -288,6 +290,13 @@ class AuthResponse(BaseModel):
     token: str
     user: UserPublic
     message: str
+    is_new_user: Optional[bool] = None
+    email_status: Optional[Dict[str, Any]] = None
+
+
+class SaveEmailConfigRequest(BaseModel):
+    """Payload to persist server-configured Gmail accounts."""
+    accounts: List[EmailAccount]
 
 
 class UserHistoryItem(BaseModel):

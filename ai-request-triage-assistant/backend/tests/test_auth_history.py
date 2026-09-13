@@ -139,3 +139,118 @@ def test_persistent_user_history():
     del_res = client.delete(f"/api/history?user_id={user_id}")
     assert del_res.status_code == 200
     assert len(client.get(f"/api/history?user_id={user_id}").json()) == 0
+
+
+def test_first_time_register_dispatches_welcome_email():
+    import uuid
+    rand_id = uuid.uuid4().hex[:6]
+    email = f"newuser_{rand_id}@company.com"
+
+    reg_payload = {
+        "name": "Devin Tester",
+        "email": email,
+        "password": "SecurePassword123!",
+    }
+    res = client.post("/api/auth/register", json=reg_payload)
+    assert res.status_code == 201
+    data = res.json()
+    assert data["success"] is True
+    assert data["is_new_user"] is True
+    assert data["email_status"] is not None
+    assert data["email_status"]["success"] is True
+    assert email in data["email_status"]["sent_to"]
+    assert "Welcome email" in data["email_status"]["message"]
+
+
+def test_first_time_google_oauth_dispatches_welcome_email_and_subsequent_login_notice():
+    import uuid
+    rand_id = uuid.uuid4().hex[:6]
+    email = f"oauth_user_{rand_id}@gmail.com"
+
+    g_payload = {
+        "name": "Jordan Lee",
+        "email": email,
+        "google_id": f"g-{rand_id}",
+        "avatar_url": "https://api.dicebear.com/7.x/initials/svg?seed=Jordan",
+    }
+
+    # 1. First-time OAuth sign-in -> MUST be is_new_user=True with welcome email
+    res1 = client.post("/api/auth/google", json=g_payload)
+    assert res1.status_code == 200
+    data1 = res1.json()
+    assert data1["success"] is True
+    assert data1["is_new_user"] is True
+    assert data1["email_status"] is not None
+    assert data1["email_status"]["success"] is True
+    assert email in data1["email_status"]["sent_to"]
+    assert "Welcome email" in data1["email_status"]["message"]
+
+    # 2. Subsequent OAuth login -> is_new_user=False with login notification
+    res2 = client.post("/api/auth/google", json=g_payload)
+    assert res2.status_code == 200
+    data2 = res2.json()
+    assert data2["success"] is True
+    assert data2["is_new_user"] is False
+    assert data2["email_status"] is not None
+    assert data2["email_status"]["success"] is True
+
+
+from unittest.mock import patch, MagicMock
+
+@patch("smtplib.SMTP")
+def test_first_time_google_oauth_live_smtp_delivery(mock_smtp):
+    mock_server = MagicMock()
+    mock_smtp.return_value = mock_server
+
+    import uuid
+    rand_id = uuid.uuid4().hex[:6]
+    email = f"live_user_{rand_id}@gmail.com"
+
+    g_payload = {
+        "name": "Live Recipient",
+        "email": email,
+        "google_id": f"g-live-{rand_id}",
+        "accounts": [
+            {
+                "email": "dispatcher@gmail.com",
+                "app_password": "abcd efgh ijkl mnop",
+                "department": "Default",
+                "is_default": True,
+            }
+        ],
+    }
+
+    res = client.post("/api/auth/google", json=g_payload)
+    assert res.status_code == 200
+    data = res.json()
+    assert data["is_new_user"] is True
+    assert data["email_status"]["is_simulation"] is False
+    assert data["email_status"]["sent_from"] == "dispatcher@gmail.com"
+    assert email in data["email_status"]["sent_to"]
+
+    # Verify SMTP was called to deliver the welcome message
+    mock_server.login.assert_called_with("dispatcher@gmail.com", "abcdefghijklmnop")
+    mock_server.send_message.assert_called()
+    mock_server.quit.assert_called()
+
+
+def test_email_config_endpoints_persistence():
+    payload = {
+        "accounts": [
+            {
+                "email": "auto_test_dispatcher@gmail.com",
+                "app_password": "xxxx yyyy zzzz wwww",
+                "department": "Engineering",
+                "is_default": True,
+            }
+        ]
+    }
+    save_res = client.post("/api/email/config", json=payload)
+    assert save_res.status_code == 200
+    assert save_res.json()["success"] is True
+
+    get_res = client.get("/api/email/config")
+    assert get_res.status_code == 200
+    accounts = get_res.json()["configured_accounts"]
+    assert any(a["email"] == "auto_test_dispatcher@gmail.com" for a in accounts)
+

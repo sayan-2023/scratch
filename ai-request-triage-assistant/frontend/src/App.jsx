@@ -174,15 +174,24 @@ export default function App() {
   };
 
   // Authentication Handlers
-  const handleLoginSuccess = (user, token) => {
+  const handleLoginSuccess = (user, token, emailStatus, isNewUser) => {
     setCurrentUser(user);
     localStorage.setItem('triage_user', JSON.stringify(user));
     localStorage.setItem('triage_token', token);
     setCurrentView('workspace');
     fetchUserHistory(user.id);
+
+    let welcomeToast = isNewUser
+      ? `Welcome to AI Request Triage, ${user.name}! Account created.`
+      : `Welcome back, ${user.name}! Authenticated as ${user.role}.`;
+
+    if (emailStatus?.message) {
+      welcomeToast += ` ${emailStatus.message}`;
+    }
+
     setToast({
       open: true,
-      message: `Welcome back, ${user.name}! Authenticated as ${user.role}.`,
+      message: welcomeToast,
       severity: 'success',
     });
   };
@@ -210,9 +219,21 @@ export default function App() {
     }
   };
 
-  const handleSaveEmailAccounts = (accounts) => {
+  const handleSaveEmailAccounts = async (accounts) => {
     setEmailAccounts(accounts);
     localStorage.setItem('gmail_accounts_config', JSON.stringify(accounts));
+
+    // Persist to backend server store as well
+    try {
+      await fetch('/api/email/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accounts }),
+      });
+    } catch (err) {
+      console.warn('Could not persist accounts to server:', err);
+    }
+
     setToast({
       open: true,
       message: `Saved ${accounts.length} Gmail dispatcher account${accounts.length === 1 ? '' : 's'}.`,
@@ -522,6 +543,7 @@ export default function App() {
           open={isAuthModalOpen}
           onClose={() => setIsAuthModalOpen(false)}
           onLoginSuccess={handleLoginSuccess}
+          emailAccounts={emailAccounts}
         />
       </Box>
     );
@@ -619,6 +641,7 @@ export default function App() {
         open={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
         onLoginSuccess={handleLoginSuccess}
+        emailAccounts={emailAccounts}
       />
 
       {/* API Key Modal */}

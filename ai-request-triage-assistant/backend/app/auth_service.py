@@ -6,7 +6,7 @@ import secrets
 import uuid
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple, Any
 
 from app.models import (
     User,
@@ -14,8 +14,13 @@ from app.models import (
     UserHistoryItem,
     TriageOutput,
     SendEmailRequest,
+    EmailAccount,
 )
-from app.email_service import send_email_message
+from app.email_service import (
+    send_email_message,
+    send_welcome_email_message,
+    get_env_accounts,
+)
 
 logger = logging.getLogger("triage_backend.auth")
 
@@ -134,8 +139,8 @@ def authenticate_google_user(
     name: str,
     avatar_url: Optional[str] = None,
     google_id: Optional[str] = None,
-) -> User:
-    """Handles Google OAuth login, creating user if first time."""
+) -> Tuple[User, bool]:
+    """Handles Google OAuth login, creating user if first time. Returns (user, is_new_user)."""
     clean_email = email.strip().lower()
     user = get_user_by_email_or_id(clean_email)
     if user:
@@ -145,7 +150,7 @@ def authenticate_google_user(
             users = load_users()
             users = [user if u.id == user.id else u for u in users]
             save_users(users)
-        return user
+        return user, False
 
     # Create new user via Google Sign-In
     random_pw = secrets.token_urlsafe(16)
@@ -161,7 +166,7 @@ def authenticate_google_user(
     users = load_users()
     users.append(new_user)
     save_users(users)
-    return new_user
+    return new_user, True
 
 
 # ==============================================================================
@@ -300,17 +305,48 @@ def clear_user_history(user_id: str) -> bool:
 
 
 # ==============================================================================
-# Login Security / Welcome Notification Email
+# Welcome Email & Login Notifications
 # ==============================================================================
+
+def send_welcome_email(
+    user_email: str,
+    user_name: str,
+    signup_method: str = "Google OAuth",
+    accounts: Optional[List[EmailAccount]] = None,
+) -> Dict[str, Any]:
+    """
+    Sends a dedicated, branded welcome onboarding email upon 1st-time account creation.
+    Dispatches live email via Gmail SMTP if a dispatcher account with App Password is available.
+    Gracefully falls back to simulation mode without failing the user registration.
+    """
+    try:
+        res = send_welcome_email_message(
+            to_email=user_email,
+            user_name=user_name,
+            signup_method=signup_method,
+            accounts=accounts,
+        )
+        logger.info(f"Welcome email result for {user_email}: {res.get('message')}")
+        return res
+    except Exception as exc:
+        logger.warning(f"Could not dispatch welcome email to {user_email}: {exc}", exc_info=True)
+        return {
+            "success": False,
+            "is_simulation": True,
+            "error": str(exc),
+            "message": f"Welcome email could not be delivered: {str(exc)}",
+        }
+
 
 def send_login_notification_email(
     user_email: str,
     user_name: str,
     auth_method: str = "Password",
-):
+    accounts: Optional[List[EmailAccount]] = None,
+) -> Dict[str, Any]:
     """
-    Sends a security notification / thank-you email upon login.
-    Uses safe simulation mode if live SMTP credentials are not configured.
+    Sends a security notification / thank-you email upon subsequent logins.
+    Uses live SMTP delivery if dispatcher accounts are configured, otherwise simulation.
     """
     now_str = datetime.now().strftime("%B %d, %Y at %I:%M %p UTC")
     subject = "Security Notice: Successful Login to AI Request Triage Assistant"
@@ -329,21 +365,44 @@ def send_login_notification_email(
         f"AI Request Triage Assistant Team\n"
     )
 
+    env_accs = get_env_accounts()
+    client_accs = accounts or []
+    all_accs = client_accs + [a for a in env_accs if not any(c.email.lower() == a.email.lower() for c in client_accs)]
+    has_live_sender = any(bool(a.app_password and a.app_password.strip()) for a in all_accs)
+
     try:
         payload = SendEmailRequest(
             to_emails=[user_email],
             subject=subject,
             body=body,
             assigned_owner="Client Success",
-            simulate=True,  # Safe simulation mode avoids blocking if SMTP is offline
+            accounts=all_accs,
+            simulate=not has_live_sender,
         )
-        send_email_message(payload)
-        logger.info(f"Dispatched login notification email for {user_email}")
+        res = send_email_message(payload)
+        logger.info(f"Dispatched login notification email for {user_email} (live={not payload.simulate})")
+        return {
+            "success": True,
+            "is_simulation": payload.simulate,
+            "sent_from": res.sent_from,
+            "message": res.message,
+        }
     except Exception as exc:
         logger.warning(f"Could not dispatch login notification email: {exc}")
+        return {
+            "success": True,
+            "is_simulation": True,
+            "error": str(exc),
+            "message": f"Login notification email queued (SMTP offline: {exc})",
+        }
 
 
-def send_password_reset_email(user_email: str, user_name: str, code: str):
+def send_password_reset_email(
+    user_email: str,
+    user_name: str,
+    code: str,
+    accounts: Optional[List[EmailAccount]] = None,
+) -> Dict[str, Any]:
     """Sends a password reset verification code email."""
     subject = "Your Password Reset Code - AI Request Triage Assistant"
     body = (
@@ -357,16 +416,34 @@ def send_password_reset_email(user_email: str, user_name: str, code: str):
         f"Security Team | AI Request Triage Assistant\n"
     )
 
+    env_accs = get_env_accounts()
+    client_accs = accounts or []
+    all_accs = client_accs + [a for a in env_accs if not any(c.email.lower() == a.email.lower() for c in client_accs)]
+    has_live_sender = any(bool(a.app_password and a.app_password.strip()) for a in all_accs)
+
     try:
         payload = SendEmailRequest(
             to_emails=[user_email],
             subject=subject,
             body=body,
             assigned_owner="Operations",
-            simulate=True,
+            accounts=all_accs,
+            simulate=not has_live_sender,
         )
-        send_email_message(payload)
-        logger.info(f"Dispatched password reset email to {user_email}")
+        res = send_email_message(payload)
+        logger.info(f"Dispatched password reset email to {user_email} (live={not payload.simulate})")
+        return {
+            "success": True,
+            "is_simulation": payload.simulate,
+            "sent_from": res.sent_from,
+            "message": res.message,
+        }
     except Exception as exc:
         logger.warning(f"Could not dispatch password reset email: {exc}")
+        return {
+            "success": True,
+            "is_simulation": True,
+            "error": str(exc),
+            "message": f"Password reset email queued (SMTP offline: {exc})",
+        }
 

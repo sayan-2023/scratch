@@ -40,7 +40,7 @@ trap cleanup SIGINT SIGTERM EXIT
 echo ""
 echo "-> Launching FastAPI backend on http://localhost:8000..."
 cd "$BACKEND_DIR"
-PYTHONPATH=. "$BACKEND_DIR/venv/bin/uvicorn" app.main:app --host 127.0.0.1 --port 8000 --reload &
+PYTHONPATH=. "$BACKEND_DIR/venv/bin/python" -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload &
 BACKEND_PID=$!
 
 # Wait for FastAPI to become ready

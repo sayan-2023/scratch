@@ -405,20 +405,70 @@ export default function AuthModal({
 
   return (
     <>
-      <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
-      <DialogTitle sx={{ m: 0, p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <SecurityIcon color="primary" />
-          <Typography variant="h6" fontWeight="bold">
-            {isForgotPassword ? 'Reset Password' : tab === 0 ? 'Sign In' : 'Create Account'}
-          </Typography>
-        </Box>
-        <IconButton onClick={handleClose} size="small">
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            backgroundColor: 'background.paper',
+            backgroundImage: 'none',
+            border: '1px solid',
+            borderColor: 'divider',
+            boxShadow: (theme) =>
+              theme.palette.mode === 'dark'
+                ? '0 20px 40px -8px rgba(0, 0, 0, 0.7), 0 0 20px rgba(59, 130, 246, 0.1)'
+                : '0 20px 35px -10px rgba(0, 0, 0, 0.12)',
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            m: 0,
+            p: 2.5,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            backgroundColor: 'background.paper',
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2 }}>
+            <Box
+              sx={{
+                width: 34,
+                height: 34,
+                borderRadius: 1.5,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: (theme) =>
+                  theme.palette.mode === 'dark'
+                    ? 'rgba(59, 130, 246, 0.15)'
+                    : 'rgba(37, 99, 235, 0.1)',
+                color: 'primary.main',
+              }}
+            >
+              <SecurityIcon fontSize="small" />
+            </Box>
+            <Typography variant="h6" fontWeight="bold" color="text.primary">
+              {isForgotPassword ? 'Reset Password' : tab === 0 ? 'Sign In' : 'Create Account'}
+            </Typography>
+          </Box>
+          <IconButton onClick={handleClose} size="small" sx={{ color: 'text.secondary' }}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </DialogTitle>
 
-      <DialogContent dividers sx={{ p: 3, backgroundColor: 'background.paper' }}>
+        <DialogContent
+          dividers
+          sx={{
+            p: 3,
+            backgroundColor: 'background.paper',
+            borderColor: 'divider',
+          }}
+        >
         {/* Alerts */}
         {errorMsg && (
           <Alert severity="error" sx={{ mb: 2 }} onClose={() => setErrorMsg('')}>
@@ -583,7 +633,8 @@ export default function AuthModal({
                     variant="outlined"
                     sx={{
                       p: 2,
-                      bgcolor: 'action.hover',
+                      bgcolor: (theme) =>
+                        theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc',
                       borderColor: 'divider',
                       borderRadius: 2,
                       textAlign: 'center',
@@ -629,15 +680,20 @@ export default function AuthModal({
                 </svg>
               }
               sx={{
-                py: 1,
+                py: 1.1,
                 mb: 2,
                 color: 'text.primary',
                 borderColor: 'divider',
+                backgroundColor: (theme) =>
+                  theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.03)' : '#ffffff',
                 fontWeight: 600,
                 textTransform: 'none',
+                borderRadius: 2,
+                transition: 'all 0.2s ease',
                 '&:hover': {
                   borderColor: 'primary.main',
-                  backgroundColor: 'action.hover',
+                  backgroundColor: (theme) =>
+                    theme.palette.mode === 'dark' ? 'rgba(59, 130, 246, 0.08)' : 'action.hover',
                 },
               }}
             >
@@ -658,7 +714,16 @@ export default function AuthModal({
                 setSuccessMsg('');
               }}
               variant="fullWidth"
-              sx={{ mb: 2 }}
+              sx={{
+                mb: 2.5,
+                borderBottom: '1px solid',
+                borderColor: 'divider',
+                '& .MuiTab-root': {
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  fontSize: '0.9rem',
+                },
+              }}
             >
               <Tab label="Sign In" />
               <Tab label="Create Account" />
@@ -796,9 +861,16 @@ export default function AuthModal({
                             height: 20,
                             fontSize: '0.7rem',
                             fontWeight: 700,
-                            backgroundColor: badge.isEnterprise ? '#ecfdf5' : '#f1f5f9',
+                            backgroundColor: (theme) =>
+                              theme.palette.mode === 'dark'
+                                ? (badge.isEnterprise ? 'rgba(5, 150, 105, 0.2)' : 'rgba(255, 255, 255, 0.06)')
+                                : (badge.isEnterprise ? '#ecfdf5' : '#f1f5f9'),
                             color: badge.color,
-                            border: `1px solid ${badge.isEnterprise ? '#a7f3d0' : '#cbd5e1'}`,
+                            border: '1px solid',
+                            borderColor: (theme) =>
+                              theme.palette.mode === 'dark'
+                                ? (badge.isEnterprise ? 'rgba(5, 150, 105, 0.4)' : 'divider')
+                                : (badge.isEnterprise ? '#a7f3d0' : '#cbd5e1'),
                           }}
                         />
                       );
@@ -838,7 +910,7 @@ export default function AuthModal({
                       return (
                         <Box>
                           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-                            <Typography variant="caption" sx={{ color: '#64748b', fontSize: '0.7rem' }}>
+                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
                               Password Strength:
                             </Typography>
                             <Typography variant="caption" sx={{ color: strength.color, fontWeight: 700, fontSize: '0.72rem' }}>
@@ -853,7 +925,12 @@ export default function AuthModal({
                                   height: 4,
                                   flexGrow: 1,
                                   borderRadius: 1,
-                                  backgroundColor: level <= strength.score ? strength.color : '#e2e8f0',
+                                  backgroundColor: (theme) =>
+                                    level <= strength.score
+                                      ? strength.color
+                                      : theme.palette.mode === 'dark'
+                                        ? 'rgba(255, 255, 255, 0.1)'
+                                        : '#e2e8f0',
                                   transition: 'all 0.2s ease',
                                 }}
                               />
@@ -911,9 +988,22 @@ export default function AuthModal({
         onClose={() => setGooglePromptOpen(false)}
         maxWidth="xs"
         fullWidth
-        PaperProps={{ sx: { borderRadius: 3, p: 1 } }}
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            p: 1,
+            backgroundColor: 'background.paper',
+            backgroundImage: 'none',
+            border: '1px solid',
+            borderColor: 'divider',
+            boxShadow: (theme) =>
+              theme.palette.mode === 'dark'
+                ? '0 20px 40px -8px rgba(0, 0, 0, 0.7), 0 0 20px rgba(59, 130, 246, 0.1)'
+                : '0 20px 35px -10px rgba(0, 0, 0, 0.12)',
+          },
+        }}
       >
-        <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1 }}>
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1, backgroundColor: 'background.paper' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2 }}>
             <svg width="22" height="22" viewBox="0 0 24 24">
               <path
@@ -933,62 +1023,19 @@ export default function AuthModal({
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
               />
             </svg>
-            <Typography variant="h6" fontWeight="bold">
+            <Typography variant="h6" fontWeight="bold" color="text.primary">
               Sign in with Google
             </Typography>
           </Box>
-          <IconButton size="small" onClick={() => setGooglePromptOpen(false)}>
+          <IconButton size="small" onClick={() => setGooglePromptOpen(false)} sx={{ color: 'text.secondary' }}>
             <CloseIcon fontSize="small" />
           </IconButton>
         </DialogTitle>
 
-        <DialogContent sx={{ pt: 1 }}>
+        <DialogContent sx={{ pt: 1, backgroundColor: 'background.paper' }}>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             Choose or enter your Google account. First-time sign-ups will receive a rich onboarding welcome email.
           </Typography>
-
-          {/* Quick presets */}
-          <Box sx={{ mb: 2.5 }}>
-            <Typography variant="caption" fontWeight="bold" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-              QUICK SELECTION:
-            </Typography>
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ gap: 1 }}>
-              <Chip
-                label="sayandutta.ec2025@gmail.com"
-                size="small"
-                onClick={() => {
-                  setGoogleEmail('sayandutta.ec2025@gmail.com');
-                  setGoogleName('Sayan Dutta');
-                }}
-                variant={googleEmail === 'sayandutta.ec2025@gmail.com' ? 'filled' : 'outlined'}
-                color={googleEmail === 'sayandutta.ec2025@gmail.com' ? 'primary' : 'default'}
-                sx={{ fontSize: '0.75rem' }}
-              />
-              <Chip
-                label="duttasayan453@gmail.com"
-                size="small"
-                onClick={() => {
-                  setGoogleEmail('duttasayan453@gmail.com');
-                  setGoogleName('Sayan Dutta');
-                }}
-                variant={googleEmail === 'duttasayan453@gmail.com' ? 'filled' : 'outlined'}
-                color={googleEmail === 'duttasayan453@gmail.com' ? 'primary' : 'default'}
-                sx={{ fontSize: '0.75rem' }}
-              />
-              <Chip
-                label="admin.google@triage.ai"
-                size="small"
-                onClick={() => {
-                  setGoogleEmail('admin.google@triage.ai');
-                  setGoogleName('Executive Lead (Google)');
-                }}
-                variant={googleEmail === 'admin.google@triage.ai' ? 'filled' : 'outlined'}
-                color={googleEmail === 'admin.google@triage.ai' ? 'primary' : 'default'}
-                sx={{ fontSize: '0.75rem' }}
-              />
-            </Stack>
-          </Box>
-
           <Box
             component="form"
             onSubmit={(e) => {

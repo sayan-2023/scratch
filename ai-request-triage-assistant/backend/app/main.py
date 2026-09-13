@@ -34,6 +34,10 @@ from app.models import (
     SaveEmailConfigRequest,
     UserHistoryItem,
     SaveHistoryRequest,
+    EnhanceTextInput,
+    EnhanceTextOutput,
+    ToneDraftInput,
+    ToneDraftOutput,
 )
 from app.mock_data import (
     MOCK_REQUESTS,
@@ -49,7 +53,12 @@ from app.mock_data import (
     delete_inbox_message,
     clear_inbox_messages,
 )
-from app.agent import run_triage, generate_dynamic_scenario
+from app.agent import (
+    run_triage,
+    generate_dynamic_scenario,
+    enhance_and_anonymize_text,
+    generate_tone_draft,
+)
 from app.email_service import (
     send_email_message,
     test_gmail_smtp,
@@ -351,6 +360,60 @@ def triage_request(payload: TriageInput):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=detail,
+        )
+
+
+@app.post("/api/ai/enhance-text", response_model=EnhanceTextOutput, tags=["AI Capabilities"])
+def enhance_text_endpoint(payload: EnhanceTextInput):
+    """
+    Advanced AI endpoint:
+    Detects and scrubs sensitive PII (credit cards, SSNs, secrets, phone numbers)
+    and uses Gemini to restructure the inquiry into an executive-grade incident briefing.
+    """
+    if not payload.text or len(payload.text.strip()) < 5:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Text must be at least 5 characters long."
+        )
+    try:
+        return enhance_and_anonymize_text(
+            text=payload.text.strip(),
+            api_key=payload.api_key.strip() if payload.api_key else None,
+        )
+    except Exception as exc:
+        logger.error(f"Error in enhance_text_endpoint: {exc}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to enhance text: {exc}"
+        )
+
+
+@app.post("/api/ai/tone-draft", response_model=ToneDraftOutput, tags=["AI Capabilities"])
+def tone_draft_endpoint(payload: ToneDraftInput):
+    """
+    Advanced AI endpoint:
+    Synthesizes a response draft tailored to a specific audience tone
+    (empathetic, executive, concise).
+    """
+    if not payload.request_text or len(payload.request_text.strip()) < 5:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Request text must be at least 5 characters long."
+        )
+    try:
+        return generate_tone_draft(
+            request_text=payload.request_text.strip(),
+            tone=payload.tone,
+            summary=payload.summary,
+            assigned_owner=payload.assigned_owner,
+            priority=payload.priority,
+            api_key=payload.api_key.strip() if payload.api_key else None,
+        )
+    except Exception as exc:
+        logger.error(f"Error in tone_draft_endpoint: {exc}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to generate tone draft: {exc}"
         )
 
 

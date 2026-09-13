@@ -122,3 +122,45 @@ def test_inbox_simulate_event():
     assert "Dispute" in data["subject"] or "Chargeback" in data["subject"]
 
 
+def test_ai_enhance_text_endpoint(monkeypatch):
+    # Test PII scrubbing and enhancement with fast mock
+    class MockLLM:
+        def invoke(self, messages):
+            class MockContent:
+                content = "ENHANCED:\nCustomer card [REDACTED_CARD_****4444] needs urgent refund for $500.\nBULLETS:\n- Customer refund requested"
+            return MockContent()
+    monkeypatch.setattr("app.agent.get_llm", lambda **kwargs: MockLLM())
+    raw_text = "Customer card 4111 2222 3333 4444 and phone 415-555-2671 needs urgent refund for $500."
+    res = client.post("/api/ai/enhance-text", json={"text": raw_text})
+    assert res.status_code == 200
+    data = res.json()
+    assert "enhanced_text" in data
+    assert "4111 2222 3333 4444" not in data["enhanced_text"]
+    assert data["redacted_items_count"] >= 1
+    assert "bullet_points" in data
+
+
+def test_ai_tone_draft_endpoint(monkeypatch):
+    # Test tone-specific drafting endpoint with fast mock
+    class MockLLM:
+        def invoke(self, messages):
+            class MockContent:
+                content = "Executive Briefing: The payment gateway failure is actively under investigation by Senior Infrastructure."
+            return MockContent()
+    monkeypatch.setattr("app.agent.get_llm", lambda **kwargs: MockLLM())
+    payload = {
+        "request_text": "Our payment portal is down with 504 errors.",
+        "summary": "Payment portal 504 gateway downtime.",
+        "assigned_owner": "Engineering",
+        "priority": "Urgent",
+        "tone": "executive",
+    }
+    res = client.post("/api/ai/tone-draft", json=payload)
+    assert res.status_code == 200
+    data = res.json()
+    assert data["tone"] == "executive"
+    assert "draft" in data
+    assert len(data["draft"]) > 10
+
+
+

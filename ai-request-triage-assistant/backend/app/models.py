@@ -42,6 +42,26 @@ class TriageAnalysis(BaseModel):
     assigned_owner: OwnerEnum = Field(
         description="The designated team responsible: Sales Team, Client Success, Finance, or Engineering."
     )
+    sentiment_label: Optional[str] = Field(
+        default="Neutral",
+        description="Sentiment descriptor: e.g. Highly Frustrated, Urgent Panicked, Neutral Inquiring, Delighted"
+    )
+    sentiment_score: Optional[float] = Field(
+        default=0.0,
+        description="Float from -1.0 (extremely negative/frustrated) to 1.0 (positive/delighted)"
+    )
+    churn_risk: Optional[str] = Field(
+        default="Low",
+        description="Client churn risk level: Critical, High, Moderate, or Low"
+    )
+    key_entities: Optional[List[str]] = Field(
+        default_factory=list,
+        description="List of key identified entities, numbers, error codes, systems, or deadlines"
+    )
+    suggested_questions: Optional[List[str]] = Field(
+        default_factory=list,
+        description="2-3 targeted clarifying questions to ask the client to diagnose faster"
+    )
 
 
 class TriageInput(BaseModel):
@@ -66,6 +86,39 @@ class TriageOutput(BaseModel):
     assigned_owner: OwnerEnum
     draft_response: str
     processing_time_ms: Optional[float] = None
+    sentiment_label: Optional[str] = "Neutral"
+    sentiment_score: Optional[float] = 0.0
+    churn_risk: Optional[str] = "Low"
+    key_entities: Optional[List[str]] = Field(default_factory=list)
+    suggested_questions: Optional[List[str]] = Field(default_factory=list)
+    alternative_drafts: Optional[Dict[str, str]] = Field(default_factory=dict)
+
+
+class EnhanceTextInput(BaseModel):
+    text: str = Field(..., min_length=5, description="Raw text to anonymize and polish")
+    api_key: Optional[str] = None
+
+
+class EnhanceTextOutput(BaseModel):
+    enhanced_text: str = Field(description="Polished, clear, and structured version of the inquiry")
+    redacted_items_count: int = Field(default=0, description="Number of sensitive PII tokens redacted")
+    bullet_points: List[str] = Field(default_factory=list, description="Key operational incident points extracted")
+    original_length: int
+    enhanced_length: int
+
+
+class ToneDraftInput(BaseModel):
+    request_text: str = Field(..., min_length=5)
+    summary: str
+    assigned_owner: str
+    priority: str
+    tone: str = Field(default="empathetic", description="Target tone: empathetic, executive, concise")
+    api_key: Optional[str] = None
+
+
+class ToneDraftOutput(BaseModel):
+    tone: str
+    draft: str
 
 
 class SampleRequest(BaseModel):

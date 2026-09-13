@@ -18,6 +18,7 @@ import {
   Select,
   MenuItem,
   Paper,
+  ButtonGroup,
 } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckIcon from '@mui/icons-material/Check';
@@ -31,8 +32,10 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import TimerOutlinedIcon from '@mui/icons-material/TimerOutlined';
-import MailOutlineIcon from '@mui/icons-material/MailOutline';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import PsychologyIcon from '@mui/icons-material/Psychology';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 
 export default function TriageResultCard({
   result,
@@ -47,6 +50,14 @@ export default function TriageResultCard({
   const [subject, setSubject] = useState('');
   const [selectedSender, setSelectedSender] = useState('auto');
 
+  // Tone Switcher State
+  const [currentTone, setCurrentTone] = useState('empathetic');
+  const [toneLoading, setToneLoading] = useState(false);
+  const [draftsByTone, setDraftsByTone] = useState({
+    empathetic: result.draft_response || '',
+    ...(result.alternative_drafts || {}),
+  });
+
   const [sending, setSending] = useState(false);
   const [sentSuccess, setSentSuccess] = useState(false);
   const [sentData, setSentData] = useState(null);
@@ -54,7 +65,14 @@ export default function TriageResultCard({
 
   // Sync draft text & defaults if result changes
   useEffect(() => {
-    setDraftText(result.draft_response || '');
+    const initialDraft = result.draft_response || '';
+    setDraftText(initialDraft);
+    setDraftsByTone({
+      empathetic: initialDraft,
+      ...(result.alternative_drafts || {}),
+    });
+    setCurrentTone('empathetic');
+
     const defaultSubject = `Re: [${result.category || 'General'} - ${result.priority || 'Normal'}] ${
       result.summary ? (result.summary.length > 55 ? result.summary.slice(0, 52) + '...' : result.summary) : 'Inquiry Follow-up'
     }`;
@@ -69,6 +87,48 @@ export default function TriageResultCard({
     navigator.clipboard.writeText(draftText);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
+  };
+
+  // Switch tone persona
+  const handleSelectTone = async (toneKey) => {
+    if (currentTone === toneKey && draftsByTone[toneKey]) return;
+    setCurrentTone(toneKey);
+
+    if (draftsByTone[toneKey]) {
+      setDraftText(draftsByTone[toneKey]);
+      return;
+    }
+
+    // Call tone generation endpoint
+    setToneLoading(true);
+    try {
+      const res = await fetch('/api/ai/tone-draft', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          request_text: result.summary || 'Client inquiry',
+          summary: result.summary,
+          assigned_owner: result.assigned_owner,
+          priority: result.priority,
+          tone: toneKey,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setDraftsByTone((prev) => ({ ...prev, [toneKey]: data.draft }));
+        setDraftText(data.draft);
+      }
+    } catch {
+      // Keep existing draft on error
+    } finally {
+      setToneLoading(false);
+    }
+  };
+
+  // Insert clarifying question into draft
+  const handleInsertQuestion = (q) => {
+    const questionSnippet = `\n\nCould you please confirm the following details for our diagnostic team:\n• ${q}`;
+    setDraftText((prev) => prev.trim() + questionSnippet);
   };
 
   // Determine which account matches this department
@@ -94,7 +154,6 @@ export default function TriageResultCard({
       return;
     }
 
-    // If attempting real live email, verify App Password exists
     if (!simulationMode && (!activeSenderAccount || !activeSenderAccount.app_password || !activeSenderAccount.app_password.trim())) {
       setSendError(
         `Cannot send live email from '${activeSenderAccount?.email || 'Gmail'}': A 16-character Google App Password is required to authenticate with Gmail SMTP. Please click "Configure Gmail" to add your App Password, or turn on Safe Simulation Mode.`
@@ -120,52 +179,47 @@ export default function TriageResultCard({
         const responseData = await onSendEmail(payload);
         setSentSuccess(true);
         setSentData(responseData);
-      } else {
-        // Fallback local mock if no handler provided
-        setSentSuccess(true);
-        setSentData({
-          sent_from: activeSenderAccount?.email || 'triage-operations@gmail.com',
-          sent_to: payload.to_emails,
-          timestamp: new Date().toLocaleTimeString(),
-          is_simulation: true,
-        });
       }
     } catch (err) {
-      setSendError(err.message || 'Failed to transmit email. Please check your Gmail configuration.');
+      setSendError(err.message || 'Failed to dispatch email.');
     } finally {
       setSending(false);
     }
   };
 
-  // Helper for priority styling
+  // Priority styling
   const getPriorityDetails = (priority) => {
     switch (priority) {
       case 'Urgent':
         return {
-          color: '#dc2626',
-          bgColor: '#fef2f2',
+          color: '#b91c1c',
+          bgColor: '#fee2e2',
           borderColor: '#fca5a5',
+          auraColor: 'rgba(239, 68, 68, 0.12)',
           icon: <ErrorOutlineIcon fontSize="small" />,
         };
       case 'High':
         return {
-          color: '#d97706',
-          bgColor: '#fffbeb',
+          color: '#b45309',
+          bgColor: '#fef3c7',
           borderColor: '#fcd34d',
+          auraColor: 'rgba(245, 158, 11, 0.12)',
           icon: <WarningAmberIcon fontSize="small" />,
         };
       case 'Medium':
         return {
-          color: '#0284c7',
-          bgColor: '#f0f9ff',
-          borderColor: '#bae6fd',
+          color: '#0369a1',
+          bgColor: '#e0f2fe',
+          borderColor: '#7dd3fc',
+          auraColor: 'rgba(14, 165, 233, 0.12)',
           icon: <InfoOutlinedIcon fontSize="small" />,
         };
       case 'Low':
         return {
-          color: '#16a34a',
-          bgColor: '#f0fdf4',
-          borderColor: '#bbf7d0',
+          color: '#15803d',
+          bgColor: '#dcfce7',
+          borderColor: '#86efac',
+          auraColor: 'rgba(16, 185, 129, 0.12)',
           icon: <CheckCircleOutlineIcon fontSize="small" />,
         };
       default:
@@ -173,12 +227,12 @@ export default function TriageResultCard({
           color: '#475569',
           bgColor: '#f8fafc',
           borderColor: '#cbd5e1',
+          auraColor: 'transparent',
           icon: <InfoOutlinedIcon fontSize="small" />,
         };
     }
   };
 
-  // Helper for department styling
   const getOwnerDetails = (owner) => {
     switch (owner) {
       case 'Engineering':
@@ -198,11 +252,12 @@ export default function TriageResultCard({
 
   return (
     <Card
-      elevation={2}
       sx={{
         borderRadius: 3,
         border: '1px solid #e2e8f0',
+        boxShadow: `0 8px 32px -4px ${priorityStyle.auraColor}, 0 4px 16px rgba(0,0,0,0.04)`,
         overflow: 'hidden',
+        transition: 'all 0.3s ease',
       }}
     >
       {/* Header Bar */}
@@ -229,47 +284,64 @@ export default function TriageResultCard({
               borderColor: priorityStyle.borderColor,
               borderWidth: 1,
               borderStyle: 'solid',
-              fontWeight: 'bold',
+              fontWeight: 800,
+              fontSize: '0.85rem',
             }}
           />
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" fontWeight="700" sx={{ color: '#0f172a' }}>
             AI Triage Completed
           </Typography>
         </Box>
 
-        {result.processing_time_ms && (
-          <Chip
-            size="small"
-            icon={<TimerOutlinedIcon fontSize="small" />}
-            label={`${(result.processing_time_ms / 1000).toFixed(2)}s pipeline`}
-            variant="outlined"
-            sx={{ backgroundColor: '#ffffff', fontSize: '0.75rem' }}
-          />
-        )}
+        <Stack direction="row" spacing={1} alignItems="center">
+          {result.churn_risk && (
+            <Chip
+              size="small"
+              label={`Churn Risk: ${result.churn_risk}`}
+              sx={{
+                height: 22,
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                backgroundColor: result.churn_risk === 'Critical' ? '#fee2e2' : result.churn_risk === 'High' ? '#fef3c7' : '#f1f5f9',
+                color: result.churn_risk === 'Critical' ? '#b91c1c' : result.churn_risk === 'High' ? '#b45309' : '#475569',
+              }}
+            />
+          )}
+
+          {result.processing_time_ms && (
+            <Chip
+              size="small"
+              icon={<TimerOutlinedIcon fontSize="small" />}
+              label={`${(result.processing_time_ms / 1000).toFixed(2)}s`}
+              variant="outlined"
+              sx={{ backgroundColor: '#ffffff', fontSize: '0.75rem', fontWeight: 600 }}
+            />
+          )}
+        </Stack>
       </Box>
 
       <CardContent sx={{ p: 3 }}>
         {/* Core Triage Metadata Grid */}
-        <Grid container spacing={2.5} sx={{ mb: 3 }}>
+        <Grid container spacing={2.5} sx={{ mb: 2.5 }}>
           {/* Category */}
           <Grid item xs={12} sm={4}>
             <Box
               sx={{
                 p: 2,
-                borderRadius: 2,
+                borderRadius: 2.5,
                 backgroundColor: '#f8fafc',
                 border: '1px solid #e2e8f0',
                 height: '100%',
               }}
             >
-              <Typography variant="caption" color="text.secondary" fontWeight="600" textTransform="uppercase">
+              <Typography variant="caption" color="text.secondary" fontWeight="700" textTransform="uppercase">
                 Assigned Category
               </Typography>
               <Box sx={{ mt: 1 }}>
                 <Chip
                   label={result.category}
                   color="primary"
-                  sx={{ fontWeight: 700, fontSize: '0.9rem', px: 0.5 }}
+                  sx={{ fontWeight: 700, fontSize: '0.9rem', px: 0.5, borderRadius: 2 }}
                 />
               </Box>
             </Box>
@@ -280,13 +352,13 @@ export default function TriageResultCard({
             <Box
               sx={{
                 p: 2,
-                borderRadius: 2,
+                borderRadius: 2.5,
                 backgroundColor: '#f8fafc',
                 border: '1px solid #e2e8f0',
                 height: '100%',
               }}
             >
-              <Typography variant="caption" color="text.secondary" fontWeight="600" textTransform="uppercase">
+              <Typography variant="caption" color="text.secondary" fontWeight="700" textTransform="uppercase">
                 Routed Department Owner
               </Typography>
               <Box sx={{ mt: 1 }}>
@@ -295,7 +367,7 @@ export default function TriageResultCard({
                   label={result.assigned_owner}
                   color={ownerDetails.color}
                   variant="outlined"
-                  sx={{ fontWeight: 700, fontSize: '0.9rem', px: 0.5, borderWidth: 2 }}
+                  sx={{ fontWeight: 700, fontSize: '0.9rem', px: 0.5, borderWidth: 2, borderRadius: 2 }}
                 />
               </Box>
             </Box>
@@ -306,16 +378,16 @@ export default function TriageResultCard({
             <Box
               sx={{
                 p: 2,
-                borderRadius: 2,
+                borderRadius: 2.5,
                 backgroundColor: '#f8fafc',
                 border: '1px solid #e2e8f0',
                 height: '100%',
               }}
             >
-              <Typography variant="caption" color="text.secondary" fontWeight="600" textTransform="uppercase">
+              <Typography variant="caption" color="text.secondary" fontWeight="700" textTransform="uppercase">
                 Priority Justification
               </Typography>
-              <Typography variant="body2" color="text.primary" sx={{ mt: 0.8, fontWeight: 500 }}>
+              <Typography variant="body2" color="text.primary" sx={{ mt: 0.8, fontWeight: 500, lineHeight: 1.5 }}>
                 {result.priority_reason}
               </Typography>
             </Box>
@@ -325,36 +397,153 @@ export default function TriageResultCard({
         {/* Short Summary Section */}
         <Box
           sx={{
-            mb: 3,
+            mb: 2.5,
             p: 2,
-            borderRadius: 2,
+            borderRadius: 2.5,
             backgroundColor: '#eff6ff',
             border: '1px solid #bfdbfe',
           }}
         >
-          <Typography variant="caption" color="primary.dark" fontWeight="700" textTransform="uppercase">
-            Request Summary
+          <Typography variant="caption" color="primary.dark" fontWeight="800" textTransform="uppercase">
+            Executive Summary
           </Typography>
-          <Typography variant="body1" color="#1e3a8a" sx={{ mt: 0.5, fontWeight: 500 }}>
+          <Typography variant="body1" color="#1e3a8a" sx={{ mt: 0.5, fontWeight: 500, lineHeight: 1.5 }}>
             {result.summary}
           </Typography>
         </Box>
+
+        {/* Detected Key Entities & Sentiment Bar */}
+        {((result.key_entities && result.key_entities.length > 0) || result.sentiment_label) && (
+          <Box
+            sx={{
+              mb: 3,
+              p: 2,
+              borderRadius: 2.5,
+              backgroundColor: '#faf5ff',
+              border: '1px solid #e9d5ff',
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 1.5,
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+              <Typography variant="caption" sx={{ color: '#7c3aed', fontWeight: 800, textTransform: 'uppercase' }}>
+                ✦ Key Entities Detected:
+              </Typography>
+              {result.key_entities && result.key_entities.length > 0 ? (
+                result.key_entities.map((entity, i) => (
+                  <Chip
+                    key={i}
+                    size="small"
+                    label={entity}
+                    sx={{ backgroundColor: '#ffffff', border: '1px solid #d8b4fe', color: '#6b21a8', fontWeight: 600, fontSize: '0.75rem' }}
+                  />
+                ))
+              ) : (
+                <Chip size="small" label="Standard Inquiry" sx={{ backgroundColor: '#ffffff', color: '#6b21a8' }} />
+              )}
+            </Box>
+
+            {result.sentiment_label && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="caption" sx={{ color: '#7c3aed', fontWeight: 700 }}>
+                  Customer Emotion:
+                </Typography>
+                <Chip
+                  size="small"
+                  label={result.sentiment_label}
+                  sx={{ backgroundColor: '#f3e8ff', color: '#6b21a8', fontWeight: 700, fontSize: '0.75rem' }}
+                />
+              </Box>
+            )}
+          </Box>
+        )}
+
+        {/* Suggested Clarifying Diagnostic Questions */}
+        {result.suggested_questions && result.suggested_questions.length > 0 && (
+          <Box sx={{ mb: 3, p: 2, borderRadius: 2.5, backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}>
+            <Typography variant="caption" sx={{ color: '#2563eb', fontWeight: 800, textTransform: 'uppercase', display: 'block', mb: 1.2 }}>
+              ✦ AI Suggested Diagnostic Questions (Click to append into email draft):
+            </Typography>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
+              {result.suggested_questions.map((q, idx) => (
+                <Button
+                  key={idx}
+                  size="small"
+                  variant="outlined"
+                  onClick={() => handleInsertQuestion(q)}
+                  startIcon={<AddCircleOutlineIcon fontSize="small" sx={{ color: '#2563eb' }} />}
+                  sx={{
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontSize: '0.8rem',
+                    textAlign: 'left',
+                    borderColor: '#cbd5e1',
+                    color: '#1e293b',
+                    backgroundColor: '#ffffff',
+                    '&:hover': {
+                      backgroundColor: '#eff6ff',
+                      borderColor: '#2563eb',
+                      color: '#1d4ed8',
+                    },
+                  }}
+                >
+                  {q}
+                </Button>
+              ))}
+            </Stack>
+          </Box>
+        )}
 
         <Divider sx={{ my: 3 }} />
 
         {/* Draft Response & Email Dispatch Section */}
         <Box>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 1.5 }}>
             <Box>
-              <Typography variant="h6" fontWeight="bold">
+              <Typography variant="h6" fontWeight="800" sx={{ color: '#0f172a' }}>
                 Approve & Transmit Client Email
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                Review recipient(s), dispatch account, and edit message before transmitting:
+                Select audience tone, verify recipient and dispatch credentials:
               </Typography>
             </Box>
 
-            <Stack direction="row" spacing={1}>
+            {/* AI Multi-Tone Switcher Controls */}
+            <Stack direction="row" spacing={1} alignItems="center">
+              <ButtonGroup size="small" sx={{ borderRadius: 2 }}>
+                {[
+                  { key: 'empathetic', label: '🤝 Empathetic' },
+                  { key: 'executive', label: '👔 Executive' },
+                  { key: 'concise', label: '⚡ Concise' },
+                ].map((item) => {
+                  const isActive = currentTone === item.key;
+                  return (
+                    <Button
+                      key={item.key}
+                      onClick={() => handleSelectTone(item.key)}
+                      disabled={toneLoading}
+                      variant={isActive ? 'contained' : 'outlined'}
+                      sx={{
+                        textTransform: 'none',
+                        fontSize: '0.78rem',
+                        fontWeight: isActive ? 700 : 500,
+                        backgroundColor: isActive ? '#7c3aed' : undefined,
+                        borderColor: '#cbd5e1',
+                        color: isActive ? '#ffffff' : '#475569',
+                        '&:hover': {
+                          backgroundColor: isActive ? '#6d28d9' : '#f8fafc',
+                        },
+                      }}
+                    >
+                      {item.label}
+                    </Button>
+                  );
+                })}
+              </ButtonGroup>
+
               <Tooltip title={copied ? 'Copied!' : 'Copy response to clipboard'}>
                 <Button
                   size="small"
@@ -362,8 +551,9 @@ export default function TriageResultCard({
                   color={copied ? 'success' : 'inherit'}
                   startIcon={copied ? <CheckIcon /> : <ContentCopyIcon />}
                   onClick={handleCopy}
+                  sx={{ borderRadius: 2, textTransform: 'none', borderColor: '#cbd5e1' }}
                 >
-                  {copied ? 'Copied' : 'Copy Text'}
+                  {copied ? 'Copied' : 'Copy'}
                 </Button>
               </Tooltip>
             </Stack>
@@ -377,11 +567,11 @@ export default function TriageResultCard({
               mb: 2,
               backgroundColor: '#f8fafc',
               border: '1px solid #e2e8f0',
-              borderRadius: 2,
+              borderRadius: 2.5,
             }}
           >
             <Grid container spacing={2}>
-              {/* Recipient Input (Supports single or multiple) */}
+              {/* Recipient Input */}
               <Grid item xs={12} sm={6}>
                 <TextField
                   label="To (Client Email ID / Multiple IDs)"
@@ -426,7 +616,7 @@ export default function TriageResultCard({
                         color="inherit"
                         size="small"
                         onClick={onOpenEmailModal}
-                        sx={{ minWidth: 40, px: 1 }}
+                        sx={{ minWidth: 40, px: 1, borderRadius: 2, borderColor: '#cbd5e1' }}
                       >
                         <SettingsOutlinedIcon fontSize="small" />
                       </Button>
@@ -456,24 +646,50 @@ export default function TriageResultCard({
             </Grid>
           </Paper>
 
-          {/* Draft Body Text Area */}
-          <TextField
-            multiline
-            rows={7}
-            fullWidth
-            value={draftText}
-            onChange={(e) => setDraftText(e.target.value)}
-            disabled={sentSuccess}
-            placeholder="Review or write the response to be emailed..."
-            sx={{
-              backgroundColor: '#fafafa',
-              '& .MuiOutlinedInput-root': {
-                fontFamily: 'inherit',
-                fontSize: '0.95rem',
-                lineHeight: 1.6,
-              },
-            }}
-          />
+          {/* Draft Body Text Area with tone loading indicator */}
+          <Box sx={{ position: 'relative' }}>
+            {toneLoading && (
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  backgroundColor: 'rgba(255,255,255,0.7)',
+                  zIndex: 2,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 1.5,
+                  borderRadius: 2.5,
+                }}
+              >
+                <CircularProgress size={24} sx={{ color: '#7c3aed' }} />
+                <Typography variant="body2" fontWeight="700" sx={{ color: '#7c3aed' }}>
+                  Synthesizing {currentTone} draft...
+                </Typography>
+              </Box>
+            )}
+
+            <TextField
+              multiline
+              rows={7}
+              fullWidth
+              value={draftText}
+              onChange={(e) => setDraftText(e.target.value)}
+              disabled={sentSuccess}
+              placeholder="Review or write the response to be emailed..."
+              sx={{
+                backgroundColor: '#ffffff',
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2.5,
+                  fontSize: '0.92rem',
+                  lineHeight: 1.6,
+                },
+              }}
+            />
+          </Box>
 
           {/* Warning if trying live delivery without App Password */}
           {!simulationMode && (!activeSenderAccount || !activeSenderAccount.app_password) && (
@@ -543,7 +759,7 @@ export default function TriageResultCard({
           )}
 
           {/* Footer Bar: Characters, Words, and Transmit Button */}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2.5, flexWrap: 'wrap', gap: 1.5 }}>
             <Typography variant="caption" color="text.secondary">
               {draftText.length} characters • {draftText.trim().split(/\s+/).filter(Boolean).length} words
             </Typography>
@@ -562,7 +778,16 @@ export default function TriageResultCard({
               }
               onClick={handleSend}
               disabled={sending || sentSuccess}
-              sx={{ px: 3, py: 1, borderRadius: 2, fontWeight: 600 }}
+              sx={{
+                px: 3.5,
+                py: 1.2,
+                borderRadius: 2.5,
+                fontWeight: 700,
+                textTransform: 'none',
+                fontSize: '0.92rem',
+                background: !sentSuccess ? 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)' : undefined,
+                boxShadow: !sentSuccess ? '0 4px 14px rgba(124, 58, 237, 0.3)' : undefined,
+              }}
             >
               {sending
                 ? 'Transmitting...'

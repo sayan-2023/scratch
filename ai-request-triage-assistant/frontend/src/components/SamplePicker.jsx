@@ -90,25 +90,52 @@ export default function SamplePicker({
   };
 
   return (
-    <Card sx={{ mb: 3, border: '1px dashed #cbd5e1', backgroundColor: '#f8fafc' }}>
-      <CardContent sx={{ pb: '16px !important' }}>
+    <Card
+      sx={{
+        mb: 3,
+        borderRadius: 3,
+        border: '1px solid #e2e8f0',
+        backgroundColor: '#ffffff',
+        boxShadow: '0 4px 20px -2px rgba(15, 23, 42, 0.04)',
+        overflow: 'hidden',
+        transition: 'all 0.2s ease',
+        '&:hover': {
+          boxShadow: '0 6px 24px -2px rgba(15, 23, 42, 0.08)',
+        },
+      }}
+    >
+      <CardContent sx={{ pb: '18px !important', pt: 2.2 }}>
         {/* Header and Controls */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5, flexWrap: 'wrap', gap: 1 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <FlashOnIcon color="primary" fontSize="small" />
-            <Typography variant="subtitle2" fontWeight="700" color="text.primary">
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2 }}>
+            <Box
+              sx={{
+                width: 28,
+                height: 28,
+                borderRadius: 1.5,
+                backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                color: '#2563eb',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <FlashOnIcon fontSize="small" />
+            </Box>
+            <Typography variant="subtitle1" fontWeight="800" sx={{ color: '#0f172a' }}>
               Scenario Presets & Dynamic Mock Testing
             </Typography>
-            <Typography variant="caption" color="text.secondary" sx={{ display: { xs: 'none', md: 'inline' } }}>
-              ({samples.length} scenarios)
-            </Typography>
+            <Chip
+              size="small"
+              label={`${samples.length} scenarios`}
+              sx={{ height: 20, fontSize: '0.7rem', backgroundColor: '#f1f5f9', color: '#64748b', fontWeight: 600 }}
+            />
           </Box>
 
           <Stack direction="row" spacing={1} alignItems="center">
             {/* AI Generate Button */}
             <Button
               variant="contained"
-              color="primary"
               size="small"
               startIcon={generatingAi ? <CircularProgress size={14} color="inherit" /> : <AutoAwesomeIcon />}
               onClick={handleOpenAiModal}
@@ -117,8 +144,13 @@ export default function SamplePicker({
                 background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
                 fontSize: '0.78rem',
                 textTransform: 'none',
-                fontWeight: 600,
-                px: 1.5,
+                fontWeight: 700,
+                borderRadius: 2,
+                px: 2,
+                boxShadow: '0 2px 8px rgba(124, 58, 237, 0.25)',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #1d4ed8 0%, #6d28d9 100%)',
+                },
               }}
             >
               {generatingAi ? 'Generating...' : '✨ AI Generate'}
@@ -131,14 +163,25 @@ export default function SamplePicker({
               size="small"
               startIcon={<AddIcon />}
               onClick={() => setIsCreateModalOpen(true)}
-              sx={{ fontSize: '0.78rem', textTransform: 'none', borderColor: '#cbd5e1' }}
+              sx={{
+                fontSize: '0.78rem',
+                textTransform: 'none',
+                fontWeight: 600,
+                borderRadius: 2,
+                borderColor: '#cbd5e1',
+                color: '#334155',
+                '&:hover': {
+                  backgroundColor: '#f8fafc',
+                  borderColor: '#94a3b8',
+                },
+              }}
             >
               New Preset
             </Button>
 
             {/* Reset Defaults Button */}
             <Tooltip title="Reset all scenarios back to the 5 baseline defaults">
-              <IconButton size="small" onClick={onResetSamples} color="default">
+              <IconButton size="small" onClick={onResetSamples} sx={{ color: '#64748b', '&:hover': { color: '#0f172a' } }}>
                 <RestartAltIcon fontSize="small" />
               </IconButton>
             </Tooltip>
@@ -167,7 +210,7 @@ export default function SamplePicker({
                     {sample.is_custom && (
                       <AutoAwesomeIcon sx={{ fontSize: '0.85rem', color: '#8b5cf6' }} />
                     )}
-                    <span>{sample.title}</span>
+                    <span style={{ fontWeight: isSelected ? 700 : 500 }}>{sample.title}</span>
                     <Typography
                       component="span"
                       variant="caption"
@@ -198,14 +241,22 @@ export default function SamplePicker({
                     </Typography>
                   </Box>
                 }
-                color={isSelected ? 'primary' : 'default'}
                 variant={isSelected ? 'filled' : 'outlined'}
                 sx={{
                   py: 2.2,
-                  px: 0.5,
-                  fontSize: '0.85rem',
-                  borderColor: isSelected ? 'primary.main' : sample.is_custom ? '#c4b5fd' : '#cbd5e1',
-                  backgroundColor: isSelected ? undefined : sample.is_custom ? '#faf5ff' : '#ffffff',
+                  px: 0.8,
+                  fontSize: '0.84rem',
+                  borderRadius: 2,
+                  transition: 'all 0.15s ease',
+                  borderColor: isSelected ? '#7c3aed' : sample.is_custom ? '#c4b5fd' : '#e2e8f0',
+                  backgroundColor: isSelected ? 'rgba(124, 58, 237, 0.08)' : sample.is_custom ? '#faf5ff' : '#ffffff',
+                  color: isSelected ? '#6d28d9' : '#1e293b',
+                  boxShadow: isSelected ? '0 0 0 2px rgba(124, 58, 237, 0.2)' : 'none',
+                  '&:hover': {
+                    backgroundColor: isSelected ? 'rgba(124, 58, 237, 0.12)' : '#f8fafc',
+                    borderColor: isSelected ? '#7c3aed' : '#94a3b8',
+                    transform: 'translateY(-1px)',
+                  },
                 }}
               />
             );

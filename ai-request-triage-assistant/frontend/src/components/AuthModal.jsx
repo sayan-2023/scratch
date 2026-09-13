@@ -30,6 +30,31 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SecurityIcon from '@mui/icons-material/Security';
 
+const calculatePasswordStrength = (pwd) => {
+  if (!pwd) return { score: 0, label: '', color: '#94a3b8' };
+  let score = 0;
+  if (pwd.length >= 8) score += 1;
+  if (/[0-9]/.test(pwd)) score += 1;
+  if (/[^A-Za-z0-9]/.test(pwd)) score += 1;
+  if (/[A-Z]/.test(pwd)) score += 1;
+
+  if (score <= 1) return { score: 1, label: 'Weak', color: '#ef4444' };
+  if (score === 2) return { score: 2, label: 'Fair', color: '#f59e0b' };
+  if (score === 3) return { score: 3, label: 'Strong', color: '#3b82f6' };
+  return { score: 4, label: 'Enterprise Grade', color: '#10b981' };
+};
+
+const getDomainBadge = (emailStr) => {
+  if (!emailStr || !emailStr.includes('@')) return null;
+  const domain = emailStr.split('@')[1]?.toLowerCase().trim();
+  if (!domain || !domain.includes('.')) return null;
+  const commonPersonal = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com'];
+  if (commonPersonal.includes(domain)) {
+    return { label: 'Personal Workspace', color: '#64748b', isEnterprise: false };
+  }
+  return { label: `✓ Enterprise Domain: ${domain}`, color: '#059669', isEnterprise: true };
+};
+
 export default function AuthModal({
   open,
   onClose,
@@ -748,7 +773,7 @@ export default function AuthModal({
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={loading}
-                  sx={{ mb: 2 }}
+                  sx={{ mb: 1.5 }}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
@@ -758,6 +783,29 @@ export default function AuthModal({
                   }}
                 />
 
+                {email && email.includes('@') && (
+                  <Box sx={{ mt: -0.5, mb: 1.5 }}>
+                    {(() => {
+                      const badge = getDomainBadge(email);
+                      if (!badge) return null;
+                      return (
+                        <Chip
+                          size="small"
+                          label={badge.label}
+                          sx={{
+                            height: 20,
+                            fontSize: '0.7rem',
+                            fontWeight: 700,
+                            backgroundColor: badge.isEnterprise ? '#ecfdf5' : '#f1f5f9',
+                            color: badge.color,
+                            border: `1px solid ${badge.isEnterprise ? '#a7f3d0' : '#cbd5e1'}`,
+                          }}
+                        />
+                      );
+                    })()}
+                  </Box>
+                )}
+
                 <TextField
                   label="Password (min 6 chars)"
                   type={showPassword ? 'text' : 'password'}
@@ -766,7 +814,7 @@ export default function AuthModal({
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={loading}
-                  sx={{ mb: 2 }}
+                  sx={{ mb: 1 }}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
@@ -782,6 +830,40 @@ export default function AuthModal({
                     ),
                   }}
                 />
+
+                {password && (
+                  <Box sx={{ mb: 2 }}>
+                    {(() => {
+                      const strength = calculatePasswordStrength(password);
+                      return (
+                        <Box>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                            <Typography variant="caption" sx={{ color: '#64748b', fontSize: '0.7rem' }}>
+                              Password Strength:
+                            </Typography>
+                            <Typography variant="caption" sx={{ color: strength.color, fontWeight: 700, fontSize: '0.72rem' }}>
+                              {strength.label}
+                            </Typography>
+                          </Box>
+                          <Stack direction="row" spacing={0.5}>
+                            {[1, 2, 3, 4].map((level) => (
+                              <Box
+                                key={level}
+                                sx={{
+                                  height: 4,
+                                  flexGrow: 1,
+                                  borderRadius: 1,
+                                  backgroundColor: level <= strength.score ? strength.color : '#e2e8f0',
+                                  transition: 'all 0.2s ease',
+                                }}
+                              />
+                            ))}
+                          </Stack>
+                        </Box>
+                      );
+                    })()}
+                  </Box>
+                )}
 
                 <TextField
                   label="Confirm Password"

@@ -45,5 +45,26 @@
       "978638"
     ],
     "expires_at": "2026-09-13T21:02:59.388966"
+  },
+  "reset_live_9700e1@example.com": {
+    "code": "807170",
+    "valid_codes": [
+      "807170"
+    ],
+    "expires_at": "2026-09-13T21:17:21.189597"
+  },
+  "reset_live_108abc@example.com": {
+    "code": "308546",
+    "valid_codes": [
+      "308546"
+    ],
+    "expires_at": "2026-09-13T21:17:32.665804"
+  },
+  "reset_live_e99974@example.com": {
+    "code": "895715",
+    "valid_codes": [
+      "895715"
+    ],
+    "expires_at": "2026-09-13T21:21:12.812058"
   }
 }

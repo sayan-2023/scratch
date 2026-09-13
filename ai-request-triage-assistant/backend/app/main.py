@@ -69,9 +69,15 @@ from app.auth_service import (
     send_login_notification_email,
     send_welcome_email,
     send_password_reset_email,
+    send_password_changed_email,
     get_user_by_email_or_id,
 )
 
+from pathlib import Path
+
+_backend_dir = Path(__file__).resolve().parent.parent
+load_dotenv(_backend_dir / ".env")
+load_dotenv(_backend_dir.parent / ".env")
 load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
@@ -96,7 +102,7 @@ app.add_middleware(
 @app.get("/health", tags=["System"])
 def health_check():
     """Health check endpoint indicating service availability and API key configuration status."""
-    has_env_key = bool(os.getenv("GEMINI_API_KEY"))
+    has_env_key = bool((os.getenv("GEMINI_API_KEY") or "").strip().strip("'\"").strip())
     return {
         "status": "healthy",
         "service": "AI Request Triage Assistant",
@@ -588,17 +594,24 @@ def verify_code_endpoint(payload: VerifyResetCodeRequest):
 
 @app.post("/api/auth/reset-password", tags=["Authentication"])
 def reset_password_endpoint(payload: ResetPasswordRequest):
-    """Verifies reset code and updates account password."""
+    """Verifies reset code and updates account password, then dispatches a congratulatory confirmation email."""
     try:
+        user = get_user_by_email_or_id(payload.email)
         success = verify_and_reset_password(payload.email, payload.reset_code, payload.new_password)
         if not success:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Unable to reset password. Please verify your email and code.",
             )
+
+        email_status = None
+        if user:
+            email_status = send_password_changed_email(user.email, user.name, payload.accounts)
+
         return {
             "success": True,
-            "message": "Password has been successfully updated! You may now sign in.",
+            "message": "Congratulations! Your new password has been successfully set. A confirmation email has been dispatched.",
+            "email_status": email_status,
         }
     except ValueError as val_err:
         raise HTTPException(

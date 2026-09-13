@@ -607,7 +607,7 @@ def build_password_reset_mime_message(
         f"Hello {user_name},\n\n"
         f"We received a request to reset the password for your AI Request Triage Assistant account ({to_email}).\n\n"
         f"Your 6-digit verification code is:\n\n"
-        f"    >> {code} <<\n\n"
+        f"    {code}\n\n"
         f"This code will expire in 30 minutes. Please enter this code on the password reset screen to set a new password.\n\n"
         f"If you did not request a password reset, you can safely disregard this email. Your password will remain unchanged.\n\n"
         f"Best regards,\n"
@@ -741,5 +741,198 @@ def send_password_reset_email_message(
         "timestamp": now_iso,
         "message": f"Verification code simulated for {to_email}. (To receive live emails in your inbox, add a Gmail App Password in Configure Gmail).",
     }
+
+
+def build_password_changed_mime_message(
+    sender_account: EmailAccount,
+    to_email: str,
+    user_name: str,
+) -> MIMEMultipart:
+    """Builds a rich, styled HTML and plain-text congratulatory password changed confirmation email."""
+    msg = MIMEMultipart("alternative")
+    display_name = sender_account.display_name or "AI Request Triage Security"
+    msg["From"] = f'"{display_name}" <{sender_account.email}>'
+    msg["To"] = to_email
+    msg["Subject"] = "Congratulations! Your Password Has Been Successfully Changed - AI Request Triage Assistant"
+    msg["Date"] = formatdate(localtime=True)
+    msg["Message-ID"] = make_msgid(domain="triage.assistant")
+
+    now_str = datetime.now().strftime("%B %d, %Y at %I:%M %p UTC")
+
+    plain_text = (
+        f"Hello {user_name},\n\n"
+        f"Congratulations! Your password for AI Request Triage Assistant has been successfully updated.\n\n"
+        f"Account Details:\n"
+        f"• Account Email: {to_email}\n"
+        f"• Updated At: {now_str}\n"
+        f"• Security Status: Password Changed Successfully\n\n"
+        f"You can now sign in to your workspace with your new password.\n\n"
+        f"Security Notice:\n"
+        f"If you made this change, no additional action is necessary.\n"
+        f"If you did NOT authorize this change, please contact our security team immediately.\n\n"
+        f"Access your dashboard: http://localhost:5173\n\n"
+        f"Warm regards,\n"
+        f"Security Team | AI Request Triage Assistant\n"
+    )
+
+    html_content = f"""<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b; background-color: #0f172a; padding: 24px 12px; margin: 0; }}
+  .container {{ max-width: 560px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }}
+  .header {{ background: linear-gradient(135deg, #059669 0%, #10b981 50%, #2563eb 100%); color: #ffffff; padding: 32px 24px; text-align: center; }}
+  .header h1 {{ margin: 0 0 6px 0; font-size: 22px; font-weight: 800; letter-spacing: -0.01em; }}
+  .header p {{ margin: 0; font-size: 14px; opacity: 0.92; }}
+  .badge {{ display: inline-block; background: rgba(255, 255, 255, 0.25); padding: 4px 14px; border-radius: 9999px; font-size: 11px; margin-top: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }}
+  .content {{ padding: 30px 26px; font-size: 15px; line-height: 1.6; color: #334155; }}
+  .greeting {{ font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 14px; }}
+  .congrats-card {{ background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 10px; padding: 18px 20px; margin: 20px 0; text-align: center; }}
+  .congrats-card h3 {{ margin: 0 0 6px 0; font-size: 17px; color: #065f46; font-weight: 700; }}
+  .congrats-card p {{ margin: 0; font-size: 14px; color: #047857; }}
+  .info-box {{ background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px 20px; margin: 20px 0; }}
+  .info-box table {{ width: 100%; border-collapse: collapse; }}
+  .info-box td {{ padding: 6px 0; font-size: 14px; }}
+  .info-box td.label {{ color: #64748b; font-weight: 500; width: 40%; }}
+  .info-box td.val {{ color: #0f172a; font-weight: 600; }}
+  .security-tip {{ background: #fffbeb; border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 4px; font-size: 13px; color: #92400e; margin: 20px 0; }}
+  .cta-box {{ text-align: center; margin: 26px 0 10px 0; }}
+  .cta-btn {{ display: inline-block; background: linear-gradient(135deg, #059669 0%, #10b981 100%); color: #ffffff !important; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-weight: 700; font-size: 14px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); }}
+  .footer {{ padding: 18px 24px; background: #f1f5f9; font-size: 12px; color: #64748b; border-top: 1px solid #e2e8f0; text-align: center; }}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>Congratulations!</h1>
+    <p>Your Password Has Been Set Successfully</p>
+    <span class="badge">Security Status: Updated</span>
+  </div>
+  <div class="content">
+    <div class="greeting">Hello {user_name},</div>
+    <p>We are pleased to confirm that your password for <strong>AI Request Triage Assistant</strong> has been updated successfully.</p>
+
+    <div class="congrats-card">
+      <h3>✓ New Password Active</h3>
+      <p>Your account credentials have been updated and are now ready for login.</p>
+    </div>
+
+    <div class="info-box">
+      <table>
+        <tr>
+          <td class="label">Account Email:</td>
+          <td class="val">{to_email}</td>
+        </tr>
+        <tr>
+          <td class="label">Updated At:</td>
+          <td class="val">{now_str}</td>
+        </tr>
+        <tr>
+          <td class="label">Action:</td>
+          <td class="val">Password Reset via Verified Security Code</td>
+        </tr>
+        <tr>
+          <td class="label">Status:</td>
+          <td class="val" style="color: #059669; font-weight: 700;">✓ Active &amp; Secured</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="cta-box">
+      <a href="http://localhost:5173" class="cta-btn">Sign In to Your Workspace &rarr;</a>
+    </div>
+
+    <div class="security-tip">
+      <strong>Security Notice:</strong> If you performed this password update, no further action is required. If you did NOT initiate this change, please contact your security administrator immediately to secure your account.
+    </div>
+  </div>
+  <div class="footer">
+    Sent by <strong>AI Request Triage Assistant Security</strong> • Automated Notification
+  </div>
+</div>
+</body>
+</html>"""
+
+    part_text = MIMEText(plain_text, "plain", "utf-8")
+    part_html = MIMEText(html_content, "html", "utf-8")
+    msg.attach(part_text)
+    msg.attach(part_html)
+    return msg
+
+
+def send_password_changed_email_message(
+    to_email: str,
+    user_name: str,
+    accounts: Optional[List[EmailAccount]] = None,
+) -> Dict[str, Any]:
+    """
+    Transmits a congratulatory password changed confirmation email.
+    Attempts live delivery via Gmail SMTP if any sender account with an App Password is provided/stored.
+    Falls back gracefully to simulation mode if no App Password exists or SMTP is offline.
+    """
+    env_accounts = get_env_accounts()
+    client_accounts = accounts or []
+    all_accounts = client_accounts + [a for a in env_accounts if not any(c.email.lower() == a.email.lower() for c in client_accounts)]
+
+    live_sender = None
+    for acc in all_accounts:
+        clean_pwd = clean_app_password(acc.app_password)
+        if acc.app_password and acc.app_password.strip() and not clean_pwd.lower().startswith("xxxx") and not acc.email.lower().startswith("auto_test_"):
+            live_sender = acc
+            break
+
+    now_iso = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    if live_sender:
+        clean_pwd = clean_app_password(live_sender.app_password)
+        msg = build_password_changed_mime_message(
+            sender_account=live_sender,
+            to_email=to_email,
+            user_name=user_name,
+        )
+        try:
+            logger.info(f"Connecting to {GMAIL_SMTP_HOST}:{GMAIL_SMTP_PORT} to send password changed confirmation from {live_sender.email} to {to_email}...")
+            server = smtplib.SMTP(GMAIL_SMTP_HOST, GMAIL_SMTP_PORT, timeout=12)
+            server.ehlo()
+            server.starttls()
+            server.ehlo()
+            server.login(live_sender.email.strip(), clean_pwd)
+            server.send_message(msg)
+            server.quit()
+
+            logger.info(f"Live password changed email delivered successfully to {to_email} via {live_sender.email}")
+            return {
+                "success": True,
+                "is_simulation": False,
+                "sent_to": [to_email],
+                "sent_from": live_sender.email,
+                "subject": msg["Subject"],
+                "timestamp": now_iso,
+                "message": f"Congratulations email sent to {to_email} via live Gmail SMTP!",
+            }
+        except Exception as exc:
+            logger.warning(f"SMTP delivery of password changed confirmation failed ({exc}). Falling back to simulation.", exc_info=True)
+            return {
+                "success": True,
+                "is_simulation": True,
+                "sent_to": [to_email],
+                "sent_from": live_sender.email,
+                "live_delivery_error": str(exc),
+                "timestamp": now_iso,
+                "message": f"Congratulations email simulated for {to_email} (SMTP offline: {exc}).",
+            }
+
+    fallback_sender = (all_accounts[0].email if all_accounts else "security@triage.ai")
+    logger.info(f"Simulating password changed confirmation email transmission to {to_email} via {fallback_sender}")
+    return {
+        "success": True,
+        "is_simulation": True,
+        "sent_to": [to_email],
+        "sent_from": fallback_sender,
+        "timestamp": now_iso,
+        "message": f"Congratulations email simulated for {to_email}. (To receive live emails in your inbox, add a Gmail App Password in Configure Gmail).",
+    }
+
 
 

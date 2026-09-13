@@ -289,6 +289,7 @@ class ResetPasswordRequest(BaseModel):
     email: str
     reset_code: str
     new_password: str = Field(..., min_length=6, description="New password (min 6 characters)")
+    accounts: Optional[List[EmailAccount]] = Field(default=None, description="Optional configured dispatcher accounts")
 
 
 class AuthResponse(BaseModel):

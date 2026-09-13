@@ -2,6 +2,7 @@ import hashlib
 import json
 import logging
 import os
+import re
 import secrets
 import uuid
 from datetime import datetime, timedelta
@@ -20,6 +21,7 @@ from app.email_service import (
     send_email_message,
     send_welcome_email_message,
     send_password_reset_email_message,
+    send_password_changed_email_message,
     get_env_accounts,
 )
 
@@ -200,8 +202,27 @@ def generate_reset_code(email: str) -> str:
 
     code = f"{secrets.randbelow(900000) + 100000}"  # 6-digit code e.g. 849204
     tokens = _load_reset_tokens()
+
+    # Find existing record if present (case-insensitive)
+    existing_key = None
+    for k in tokens:
+        if k.strip().lower() == clean_email:
+            existing_key = k
+            break
+
+    existing = tokens.get(existing_key, {}) if existing_key else {}
+    valid_codes = existing.get("valid_codes", [])
+    if "code" in existing and existing["code"] not in valid_codes:
+        valid_codes.append(existing["code"])
+
+    # Keep active valid codes (up to 5 recent codes issued within the 30-minute window)
+    if code not in valid_codes:
+        valid_codes.append(code)
+    valid_codes = valid_codes[-5:]
+
     tokens[clean_email] = {
         "code": code,
+        "valid_codes": valid_codes,
         "expires_at": (datetime.now() + timedelta(minutes=30)).isoformat(),
     }
     _save_reset_tokens(tokens)
@@ -212,18 +233,40 @@ def verify_reset_code(email: str, reset_code: str) -> bool:
     """Verifies that the reset code is valid and active without consuming it."""
     clean_email = email.strip().lower()
     tokens = _load_reset_tokens()
-    record = tokens.get(clean_email)
+
+    # Case-insensitive & trimmed key lookup
+    target_key = None
+    record = None
+    for k, v in tokens.items():
+        if k.strip().lower() == clean_email:
+            target_key = k
+            record = v
+            break
+
     if not record:
         raise ValueError("No active password reset request found. Please request a new code.")
 
-    if record.get("code") != reset_code.strip():
-        raise ValueError("Invalid verification code. Please check your email and try again.")
-
     expires_at = datetime.fromisoformat(record["expires_at"])
     if datetime.now() > expires_at:
-        del tokens[clean_email]
-        _save_reset_tokens(tokens)
+        if target_key and target_key in tokens:
+            del tokens[target_key]
+            _save_reset_tokens(tokens)
         raise ValueError("Verification code has expired. Please request a new one.")
+
+    # Normalize input: extract all numeric digits (tolerant to spaces, dashes, brackets)
+    clean_input = re.sub(r"\D", "", str(reset_code).strip())
+    if not clean_input:
+        raise ValueError("Please enter the 6-digit verification code sent to your email.")
+
+    # Collect all valid codes
+    valid_codes = record.get("valid_codes", [])
+    if "code" in record and record["code"] not in valid_codes:
+        valid_codes.append(record["code"])
+
+    clean_valid = [re.sub(r"\D", "", str(c)) for c in valid_codes]
+
+    if clean_input not in clean_valid:
+        raise ValueError("Invalid verification code. Please check your email and try again.")
 
     return True
 
@@ -232,18 +275,33 @@ def verify_and_reset_password(email: str, reset_code: str, new_password: str) ->
     """Verifies reset code and updates password."""
     clean_email = email.strip().lower()
     tokens = _load_reset_tokens()
-    record = tokens.get(clean_email)
+
+    target_key = None
+    record = None
+    for k, v in tokens.items():
+        if k.strip().lower() == clean_email:
+            target_key = k
+            record = v
+            break
+
     if not record:
         raise ValueError("No active password reset request found. Please request a new code.")
 
-    if record.get("code") != reset_code.strip():
-        raise ValueError("Invalid verification code. Please check your email or request a new code.")
-
     expires_at = datetime.fromisoformat(record["expires_at"])
     if datetime.now() > expires_at:
-        del tokens[clean_email]
-        _save_reset_tokens(tokens)
+        if target_key and target_key in tokens:
+            del tokens[target_key]
+            _save_reset_tokens(tokens)
         raise ValueError("Verification code has expired. Please request a new one.")
+
+    clean_input = re.sub(r"\D", "", str(reset_code).strip())
+    valid_codes = record.get("valid_codes", [])
+    if "code" in record and record["code"] not in valid_codes:
+        valid_codes.append(record["code"])
+    clean_valid = [re.sub(r"\D", "", str(c)) for c in valid_codes]
+
+    if clean_input not in clean_valid:
+        raise ValueError("Invalid verification code. Please check your email or request a new code.")
 
     # Update password
     users = load_users()
@@ -256,7 +314,10 @@ def verify_and_reset_password(email: str, reset_code: str, new_password: str) ->
 
     if updated:
         save_users(users)
-        del tokens[clean_email]
+        if target_key and target_key in tokens:
+            del tokens[target_key]
+        if clean_email in tokens:
+            del tokens[clean_email]
         _save_reset_tokens(tokens)
         return True
     return False
@@ -431,5 +492,19 @@ def send_password_reset_email(
         code=code,
         accounts=accounts,
     )
+
+
+def send_password_changed_email(
+    user_email: str,
+    user_name: str,
+    accounts: Optional[List[EmailAccount]] = None,
+) -> Dict[str, Any]:
+    """Dispatches a congratulatory password changed confirmation email."""
+    return send_password_changed_email_message(
+        to_email=user_email,
+        user_name=user_name,
+        accounts=accounts,
+    )
+
 
 

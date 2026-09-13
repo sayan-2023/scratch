@@ -1,6 +1,7 @@
 import os
 import time
 from typing import Optional, TypedDict
+from pathlib import Path
 from dotenv import load_dotenv
 
 from langchain_core.messages import SystemMessage, HumanMessage
@@ -17,6 +18,10 @@ from app.models import (
     SampleRequest,
 )
 
+# Explicitly load .env from backend/ and root directories
+_agent_dir = Path(__file__).resolve().parent.parent
+load_dotenv(_agent_dir / ".env")
+load_dotenv(_agent_dir.parent / ".env")
 load_dotenv()
 
 
@@ -36,7 +41,8 @@ class TriageState(TypedDict):
 
 def get_llm(api_key: Optional[str] = None, model_name: str = "gemini-2.5-flash"):
     """Instantiate Google Gemini Chat model."""
-    effective_key = api_key or os.getenv("GEMINI_API_KEY")
+    raw_key = api_key or os.getenv("GEMINI_API_KEY") or ""
+    effective_key = raw_key.strip().strip("'\"").strip()
     if not effective_key:
         raise ValueError(
             "Google Gemini API key not found. Please provide it in the UI or set GEMINI_API_KEY in the environment."

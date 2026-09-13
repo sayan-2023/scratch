@@ -112,6 +112,9 @@ def test_forgot_and_reset_password_flow():
         },
     )
     assert reset_res.status_code == 200
+    assert reset_res.json()["success"] is True
+    assert "congratulations" in reset_res.json()["message"].lower()
+    assert reset_res.json()["email_status"] is not None
 
     # 3. Log in with new password
     login_res = client.post(
@@ -322,5 +325,57 @@ def test_forgot_password_live_smtp_delivery(monkeypatch):
     mock_server.login.assert_called_with("dispatcher@gmail.com", "abcdefghijklmnop")
     mock_server.send_message.assert_called()
     mock_server.quit.assert_called()
+
+
+def test_reset_password_dispatches_congratulations_email_live_smtp(monkeypatch):
+    """Verifies that reset-password delivers a congratulations email via live SMTP."""
+    import smtplib
+    mock_server = MagicMock()
+    monkeypatch.setattr(smtplib, "SMTP", lambda host, port, timeout: mock_server)
+
+    import uuid
+    email = f"reset_congrats_{uuid.uuid4().hex[:6]}@example.com"
+    # Pre-register user
+    reg_res = client.post("/api/auth/register", json={
+        "name": "Congrats User",
+        "email": email,
+        "password": "InitialPassword123!",
+    })
+    assert reg_res.status_code == 201
+
+    # Request code
+    res = client.post("/api/auth/forgot-password", json={"email": email})
+    assert res.status_code == 200
+
+    tokens = _load_reset_tokens()
+    code = tokens[email.lower()]["code"]
+
+    # Reset password with live dispatcher account
+    reset_res = client.post("/api/auth/reset-password", json={
+        "email": email,
+        "reset_code": code,
+        "new_password": "NewSecretPassword2026!",
+        "accounts": [
+            {
+                "email": "dispatcher@gmail.com",
+                "app_password": "abcdefghijklmnop",
+                "department": "Default",
+                "is_default": True,
+            }
+        ],
+    })
+    assert reset_res.status_code == 200
+    data = reset_res.json()
+    assert data["success"] is True
+    assert "congratulations" in data["message"].lower()
+    assert data["email_status"]["is_simulation"] is False
+    assert data["email_status"]["sent_from"] == "dispatcher@gmail.com"
+    assert email in data["email_status"]["sent_to"]
+
+    # Verify SMTP was called
+    mock_server.login.assert_called_with("dispatcher@gmail.com", "abcdefghijklmnop")
+    mock_server.send_message.assert_called()
+    mock_server.quit.assert_called()
+
 
 

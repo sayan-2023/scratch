@@ -1,5 +1,60 @@
 [
   {
+    "id": "sim-2b555c",
+    "source": "Stripe Webhook",
+    "sender": "notifications@stripe.com (re: Dispute dp_9104)",
+    "channel": "Payment Webhook",
+    "subject": "Chargeback Warning: Account Disputed $3,800.00",
+    "body": "Notification from Stripe: Dispute dp_9104 has been raised by cardholder for $3,800.00. Reason: Unrecognized transaction. Please provide invoice proof and service fulfillment logs before Friday 5:00 PM EST to prevent automatic forfeiture.",
+    "timestamp": "2026-09-13 20:25:50",
+    "status": "pending",
+    "triage_result": null
+  },
+  {
+    "id": "sim-d74132",
+    "source": "Stripe Webhook",
+    "sender": "notifications@stripe.com (re: Dispute dp_9104)",
+    "channel": "Payment Webhook",
+    "subject": "Chargeback Warning: Account Disputed $3,800.00",
+    "body": "Notification from Stripe: Dispute dp_9104 has been raised by cardholder for $3,800.00. Reason: Unrecognized transaction. Please provide invoice proof and service fulfillment logs before Friday 5:00 PM EST to prevent automatic forfeiture.",
+    "timestamp": "2026-09-13 20:25:41",
+    "status": "pending",
+    "triage_result": null
+  },
+  {
+    "id": "sim-8ad7eb",
+    "source": "Stripe Webhook",
+    "sender": "notifications@stripe.com (re: Dispute dp_9104)",
+    "channel": "Payment Webhook",
+    "subject": "Chargeback Warning: Account Disputed $3,800.00",
+    "body": "Notification from Stripe: Dispute dp_9104 has been raised by cardholder for $3,800.00. Reason: Unrecognized transaction. Please provide invoice proof and service fulfillment logs before Friday 5:00 PM EST to prevent automatic forfeiture.",
+    "timestamp": "2026-09-13 20:16:31",
+    "status": "pending",
+    "triage_result": null
+  },
+  {
+    "id": "sim-67d071",
+    "source": "Stripe Webhook",
+    "sender": "notifications@stripe.com (re: Dispute dp_9104)",
+    "channel": "Payment Webhook",
+    "subject": "Chargeback Warning: Account Disputed $3,800.00",
+    "body": "Notification from Stripe: Dispute dp_9104 has been raised by cardholder for $3,800.00. Reason: Unrecognized transaction. Please provide invoice proof and service fulfillment logs before Friday 5:00 PM EST to prevent automatic forfeiture.",
+    "timestamp": "2026-09-13 20:13:27",
+    "status": "pending",
+    "triage_result": null
+  },
+  {
+    "id": "sim-7d56e6",
+    "source": "Stripe Webhook",
+    "sender": "notifications@stripe.com (re: Dispute dp_9104)",
+    "channel": "Payment Webhook",
+    "subject": "Chargeback Warning: Account Disputed $3,800.00",
+    "body": "Notification from Stripe: Dispute dp_9104 has been raised by cardholder for $3,800.00. Reason: Unrecognized transaction. Please provide invoice proof and service fulfillment logs before Friday 5:00 PM EST to prevent automatic forfeiture.",
+    "timestamp": "2026-09-13 20:03:11",
+    "status": "pending",
+    "triage_result": null
+  },
+  {
     "id": "sim-7ea6fa",
     "source": "Stripe Webhook",
     "sender": "notifications@stripe.com (re: Dispute dp_9104)",

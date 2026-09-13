@@ -279,7 +279,11 @@ export default function AuthModal({
 
   // Handle Verify Code
   const handleVerifyCode = async () => {
-    if (!resetCode.trim()) {
+    // Extract numeric digits, or fallback to trimmed input
+    const numericCode = resetCode.replace(/[^0-9]/g, '');
+    const codeToVerify = numericCode.length === 6 ? numericCode : resetCode.trim();
+
+    if (!codeToVerify) {
       setErrorMsg('Please enter the 6-digit verification code sent to your email.');
       return;
     }
@@ -294,7 +298,7 @@ export default function AuthModal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: email.trim(),
-          reset_code: resetCode.trim(),
+          reset_code: codeToVerify,
         }),
       });
 
@@ -320,7 +324,10 @@ export default function AuthModal({
       setErrorMsg('Please verify the verification code first by clicking "Verify Code".');
       return;
     }
-    if (!resetCode.trim() || !newPassword.trim()) {
+    const numericCode = resetCode.replace(/[^0-9]/g, '');
+    const codeToSubmit = numericCode.length === 6 ? numericCode : resetCode.trim();
+
+    if (!codeToSubmit || !newPassword.trim()) {
       setErrorMsg('Please enter your new password.');
       return;
     }
@@ -339,8 +346,9 @@ export default function AuthModal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: email.trim(),
-          reset_code: resetCode.trim(),
+          reset_code: codeToSubmit,
           new_password: newPassword.trim(),
+          accounts: emailAccounts && emailAccounts.length > 0 ? emailAccounts : undefined,
         }),
       });
 
@@ -349,7 +357,12 @@ export default function AuthModal({
         throw new Error(data.detail || 'Password reset failed.');
       }
 
-      setSuccessMsg(data.message);
+      let successMsgText = data.message || 'Congratulations! Your new password has been successfully updated.';
+      if (data.email_status?.message && !successMsgText.includes(data.email_status.message)) {
+        successMsgText += ` (${data.email_status.message})`;
+      }
+      setSuccessMsg(successMsgText);
+
       setTimeout(() => {
         setIsForgotPassword(false);
         setResetStep(1);
@@ -357,7 +370,7 @@ export default function AuthModal({
         setResetCode('');
         setPassword(newPassword);
         setTab(0);
-      }, 1200);
+      }, 1500);
     } catch (err) {
       setErrorMsg(err.message);
     } finally {
@@ -452,7 +465,7 @@ export default function AuthModal({
                     fullWidth
                     value={resetCode}
                     onChange={(e) => {
-                      setResetCode(e.target.value.trim());
+                      setResetCode(e.target.value);
                       if (isCodeVerified) setIsCodeVerified(false);
                     }}
                     onKeyDown={(e) => {
@@ -465,7 +478,7 @@ export default function AuthModal({
                     }}
                     disabled={loading || verifyingCode}
                     placeholder="e.g. 123456"
-                    inputProps={{ maxLength: 10 }}
+                    inputProps={{ maxLength: 20 }}
                     helperText={
                       isCodeVerified
                         ? '✓ Code verified successfully'

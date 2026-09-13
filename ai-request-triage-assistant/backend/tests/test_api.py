@@ -32,13 +32,16 @@ def test_triage_empty_input_validation():
     assert response.status_code == 422 or response.status_code == 400
 
 
-def test_triage_missing_key_graceful_handling():
+def test_triage_missing_key_graceful_handling(monkeypatch):
     # Calling triage without key should return a clean 400 or handled error, not crash
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
     response = client.post("/api/triage", json={"request_text": "Our servers are crashing and we cannot access invoices."})
     # If no GEMINI_API_KEY is present in env, it raises 400 with helpful message
     if response.status_code != 200:
         assert response.status_code in (400, 500)
         assert "Gemini" in response.json()["detail"] or "API key" in response.json()["detail"]
+    assert response.status_code in (400, 500)
+    assert "Gemini" in response.json()["detail"] or "API key" in response.json()["detail"]
 
 
 def test_samples_crud_and_reset():

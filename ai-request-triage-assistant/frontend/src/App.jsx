@@ -20,6 +20,7 @@ import AuthModal from './components/AuthModal';
 import LandingPage from './components/LandingPage';
 import AnimatedRobotCompanion from './components/AnimatedRobotCompanion';
 import MultimodalRagChatModal from './components/MultimodalRagChatModal';
+import GoogleOAuthCelebrationModal from './components/GoogleOAuthCelebrationModal';
 import { useColorMode } from './ThemeContext';
 
 export default function App() {
@@ -41,6 +42,11 @@ export default function App() {
   });
 
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [googleCelebration, setGoogleCelebration] = useState({
+    open: false,
+    userData: null,
+    emailStatus: null,
+  });
 
   // API Key & Backend status
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('gemini_api_key') || '');
@@ -179,24 +185,42 @@ export default function App() {
   };
 
   // Authentication Handlers
-  const handleLoginSuccess = (user, token, emailStatus, isNewUser) => {
+  const handleLoginSuccess = (user, token, emailStatus, isNewUser, meta = {}) => {
     setCurrentUser(user);
     localStorage.setItem('triage_user', JSON.stringify(user));
     localStorage.setItem('triage_token', token);
-    setCurrentView('workspace');
     fetchUserHistory(user.id);
 
-    let welcomeToast = isNewUser
-      ? `Welcome to AI Request Triage, ${user.name}! Account created.`
-      : `Welcome back, ${user.name}! Authenticated as ${user.role}.`;
+    if (meta?.isGoogleOAuth) {
+      setGoogleCelebration({
+        open: true,
+        userData: user,
+        emailStatus: emailStatus,
+      });
+    } else {
+      setCurrentView('workspace');
+      let welcomeToast = isNewUser
+        ? `Welcome to AI Request Triage, ${user.name}! Account created.`
+        : `Welcome back, ${user.name}! Authenticated as ${user.role}.`;
 
-    if (emailStatus?.message) {
-      welcomeToast += ` ${emailStatus.message}`;
+      if (emailStatus?.message) {
+        welcomeToast += ` ${emailStatus.message}`;
+      }
+
+      setToast({
+        open: true,
+        message: welcomeToast,
+        severity: 'success',
+      });
     }
+  };
 
+  const handleEnterWorkspaceFromGoogle = () => {
+    setGoogleCelebration((prev) => ({ ...prev, open: false }));
+    setCurrentView('workspace');
     setToast({
       open: true,
-      message: welcomeToast,
+      message: `Welcome, ${currentUser?.name || 'Google User'}! Your AI Workspace is ready.`,
       severity: 'success',
     });
   };
@@ -554,6 +578,15 @@ export default function App() {
           onLoginSuccess={handleLoginSuccess}
           emailAccounts={emailAccounts}
         />
+
+        {/* Google OAuth Celebration Modal */}
+        <GoogleOAuthCelebrationModal
+          open={googleCelebration.open}
+          onClose={() => setGoogleCelebration((prev) => ({ ...prev, open: false }))}
+          userData={googleCelebration.userData}
+          emailStatus={googleCelebration.emailStatus}
+          onEnterWorkspace={handleEnterWorkspaceFromGoogle}
+        />
       </Box>
     );
   }
@@ -681,6 +714,15 @@ export default function App() {
         onClose={() => setIsAuthModalOpen(false)}
         onLoginSuccess={handleLoginSuccess}
         emailAccounts={emailAccounts}
+      />
+
+      {/* Google OAuth Celebration Modal */}
+      <GoogleOAuthCelebrationModal
+        open={googleCelebration.open}
+        onClose={() => setGoogleCelebration((prev) => ({ ...prev, open: false }))}
+        userData={googleCelebration.userData}
+        emailStatus={googleCelebration.emailStatus}
+        onEnterWorkspace={handleEnterWorkspaceFromGoogle}
       />
 
       {/* API Key Modal */}

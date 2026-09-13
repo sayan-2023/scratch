@@ -149,16 +149,78 @@ def register_user(name: str, email: str, password: str) -> User:
     return new_user
 
 
+def verify_google_credentials(email: str, password: str) -> Tuple[bool, Optional[str], Optional[User]]:
+    """
+    Validates Google Account credentials against stored users or email accounts.
+    Returns (is_valid, error_message, user).
+    """
+    clean_email = email.strip().lower()
+    if not clean_email or "@" not in clean_email or "." not in clean_email:
+        return False, "Enter a valid email address.", None
+
+    if not password:
+        return False, "Enter a password.", None
+
+    user = get_user_by_email_or_id(clean_email)
+    if user:
+        # Check standard user password
+        if verify_password(password, user.password_hash):
+            return True, None, user
+
+        # Also check against configured Gmail app passwords
+        try:
+            from app.email_service import load_stored_email_accounts
+            stored_accounts = load_stored_email_accounts()
+            for acc in stored_accounts:
+                if acc.email.lower() == clean_email and acc.app_password:
+                    clean_entered = password.replace(" ", "").strip().lower()
+                    clean_stored = acc.app_password.replace(" ", "").strip().lower()
+                    if clean_entered == clean_stored or password == acc.app_password:
+                        return True, None, user
+        except Exception:
+            pass
+
+        return False, "Wrong password. Try again or click Forgot password to reset it.", user
+
+    # User not in database yet: check if configured in email accounts
+    try:
+        from app.email_service import load_stored_email_accounts
+        stored_accounts = load_stored_email_accounts()
+        for acc in stored_accounts:
+            if acc.email.lower() == clean_email and acc.app_password:
+                clean_entered = password.replace(" ", "").strip().lower()
+                clean_stored = acc.app_password.replace(" ", "").strip().lower()
+                if clean_entered == clean_stored or password == acc.app_password:
+                    return True, None, None
+                else:
+                    return False, "Wrong password. Try again or click Forgot password to reset it.", None
+    except Exception:
+        pass
+
+    # For a completely new Google account, enforce Google password length >= 6
+    if len(password) < 6:
+        return False, "Wrong password. Google Account passwords must be at least 6 characters.", None
+
+    return True, None, None
+
+
 def authenticate_google_user(
     email: str,
     name: str,
     avatar_url: Optional[str] = None,
     google_id: Optional[str] = None,
+    password: Optional[str] = None,
 ) -> Tuple[User, bool]:
     """Handles Google OAuth login, creating user if first time. Returns (user, is_new_user)."""
     clean_email = email.strip().lower()
     user = get_user_by_email_or_id(clean_email)
     if user:
+        # If password was provided, verify it!
+        if password:
+            is_valid, err_msg, _ = verify_google_credentials(clean_email, password)
+            if not is_valid:
+                raise ValueError(err_msg or "Wrong password. Try again or click Forgot password to reset it.")
+
         # Update avatar if provided
         if avatar_url and user.avatar_url != avatar_url:
             user.avatar_url = avatar_url
@@ -168,12 +230,18 @@ def authenticate_google_user(
         return user, False
 
     # Create new user via Google Sign-In
-    random_pw = secrets.token_urlsafe(16)
+    if password:
+        if len(password) < 6:
+            raise ValueError("Google Account passwords must be at least 6 characters.")
+        user_pw = password
+    else:
+        user_pw = secrets.token_urlsafe(16)
+
     new_user = User(
         id=f"usr-g-{uuid.uuid4().hex[:6]}",
         email=clean_email,
         name=name.strip(),
-        password_hash=hash_password(random_pw),
+        password_hash=hash_password(user_pw),
         role="User",
         avatar_url=avatar_url or f"https://api.dicebear.com/7.x/initials/svg?seed={name.strip()}",
         created_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),

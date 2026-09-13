@@ -318,11 +318,21 @@ class RegisterRequest(BaseModel):
 
 class GoogleAuthRequest(BaseModel):
     """Payload for Google OAuth / Gmail sign-in."""
-    email: str
-    name: str
+    email: Optional[str] = None
+    name: Optional[str] = None
+    password: Optional[str] = None
     google_id: Optional[str] = None
     avatar_url: Optional[str] = None
+    id_token: Optional[str] = None
+    locale: Optional[str] = None
+    verified_email: Optional[bool] = None
     accounts: Optional[List[EmailAccount]] = Field(default=None, description="Optional configured dispatcher accounts")
+
+
+class VerifyGoogleCredentialsRequest(BaseModel):
+    """Payload to verify Google Account password credentials."""
+    email: str = Field(..., description="Google or Gmail address")
+    password: str = Field(..., min_length=1, description="Entered Google password")
 
 
 class ForgotPasswordRequest(BaseModel):

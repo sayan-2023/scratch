@@ -7,6 +7,8 @@ from dotenv import load_dotenv
 
 import uuid
 import random
+import json
+import base64
 from datetime import datetime
 
 from app.models import (
@@ -27,6 +29,7 @@ from app.models import (
     LoginRequest,
     RegisterRequest,
     GoogleAuthRequest,
+    VerifyGoogleCredentialsRequest,
     ForgotPasswordRequest,
     VerifyResetCodeRequest,
     ResetPasswordRequest,
@@ -79,6 +82,7 @@ from app.auth_service import (
     authenticate_user,
     register_user,
     authenticate_google_user,
+    verify_google_credentials,
     generate_reset_code,
     verify_reset_code,
     verify_and_reset_password,
@@ -576,6 +580,55 @@ def register_endpoint(payload: RegisterRequest):
     )
 
 
+def _extract_google_claims(id_token: Optional[str]) -> dict:
+    """Safely extracts claims from Google OAuth JWT ID token if provided."""
+    if not id_token or not isinstance(id_token, str):
+        return {}
+    try:
+        parts = id_token.split(".")
+        if len(parts) >= 2:
+            import base64
+            padded = parts[1] + "=" * ((4 - len(parts[1]) % 4) % 4)
+            raw = base64.urlsafe_b64decode(padded.encode("utf-8"))
+            return json.loads(raw.decode("utf-8"))
+    except Exception:
+        pass
+    return {}
+
+
+@app.get("/api/auth/google/config", tags=["Authentication"])
+def google_auth_config_endpoint():
+    """Returns Google OAuth public configuration and client status."""
+    google_client_id = os.getenv("GOOGLE_CLIENT_ID", "")
+    return {
+        "success": True,
+        "client_id": google_client_id,
+        "auth_uri": "https://accounts.google.com/o/oauth2/v2/auth",
+        "scopes": ["openid", "email", "profile"],
+        "has_cloud_client_id": bool(google_client_id),
+        "mode": "hybrid",
+    }
+
+
+@app.post("/api/auth/google/verify-credentials", tags=["Authentication"])
+def verify_google_credentials_endpoint(payload: VerifyGoogleCredentialsRequest):
+    """Verifies Google Account password against account records."""
+    is_valid, error_msg, user = verify_google_credentials(payload.email, payload.password)
+    if not is_valid:
+        return {
+            "valid": False,
+            "detail": error_msg or "Wrong password. Try again or click Forgot password to reset it.",
+            "is_new": user is None,
+        }
+    return {
+        "valid": True,
+        "detail": "Credentials verified successfully.",
+        "is_new": user is None,
+        "name": user.name if user else None,
+        "email": payload.email.strip().lower(),
+    }
+
+
 @app.post("/api/auth/google", response_model=AuthResponse, tags=["Authentication"])
 def google_auth_endpoint(payload: GoogleAuthRequest):
     """Authenticates via Google OAuth / Gmail sign-in with automatic account resolution and welcome email."""
@@ -583,12 +636,33 @@ def google_auth_endpoint(payload: GoogleAuthRequest):
     if payload.accounts:
         save_stored_email_accounts(payload.accounts)
 
-    user, is_new = authenticate_google_user(
-        email=payload.email,
-        name=payload.name,
-        avatar_url=payload.avatar_url,
-        google_id=payload.google_id,
-    )
+    # If id_token passed, attempt decoding claims
+    claims = _extract_google_claims(payload.id_token)
+
+    resolved_email = (payload.email or claims.get("email") or "").strip().lower()
+    resolved_name = (payload.name or claims.get("name") or resolved_email.split("@")[0]).strip()
+    resolved_avatar = payload.avatar_url or claims.get("picture")
+    resolved_google_id = payload.google_id or claims.get("sub")
+
+    if not resolved_email or "@" not in resolved_email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="A valid Google / Gmail address is required for Google OAuth.",
+        )
+
+    try:
+        user, is_new = authenticate_google_user(
+            email=resolved_email,
+            name=resolved_name,
+            avatar_url=resolved_avatar,
+            google_id=resolved_google_id,
+            password=payload.password,
+        )
+    except ValueError as val_err:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(val_err),
+        )
 
     if is_new:
         # First-time user signup with OAuth: send rich welcome email!

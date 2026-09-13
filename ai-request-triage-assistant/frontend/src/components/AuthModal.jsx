@@ -64,9 +64,6 @@ export default function AuthModal({
   const [tab, setTab] = useState(0); // 0: Sign In, 1: Register
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [resetStep, setResetStep] = useState(1); // 1: Request code, 2: Reset password
-  const [googlePromptOpen, setGooglePromptOpen] = useState(false);
-  const [googleEmail, setGoogleEmail] = useState('');
-  const [googleName, setGoogleName] = useState('');
 
   // Form states
   const [email, setEmail] = useState('');
@@ -92,7 +89,6 @@ export default function AuthModal({
     setVerifyingCode(false);
     setResetCode('');
     setNewPassword('');
-    setGooglePromptOpen(false);
     onClose();
   };
 
@@ -196,48 +192,31 @@ export default function AuthModal({
     }
   };
 
-  // Open Google OAuth Dialog
-  const handleOpenGooglePrompt = () => {
-    if (email.trim() && email.includes('@')) {
-      setGoogleEmail(email.trim());
-      setGoogleName(name.trim() || email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()));
-    } else if (!googleEmail) {
-      setGoogleEmail('sayandutta.ec2025@gmail.com');
-      setGoogleName('Sayan Dutta');
-    }
-    setGooglePromptOpen(true);
-  };
-
-  // Execute Google OAuth Sign-in / Sign-up
-  const handleGoogleSignIn = async (overrideEmail, overrideName) => {
-    const targetEmail = (overrideEmail || googleEmail || email).trim();
-    const targetName = (overrideName || googleName || name).trim() || targetEmail.split('@')[0];
-
-    if (!targetEmail || !targetEmail.includes('@')) {
-      setErrorMsg('Please enter a valid Google / Gmail address.');
-      return;
-    }
-
+  // Process OAuth Handshake from Google Popup
+  const handleGoogleOAuthPayload = async (payload) => {
     setLoading(true);
     setErrorMsg('');
-    setSuccessMsg('');
+    setSuccessMsg('Verifying Google OAuth 2.0 credentials...');
 
     try {
       const res = await fetch('/api/auth/google', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: targetEmail,
-          name: targetName,
-          google_id: `g-auth-${Date.now()}`,
-          avatar_url: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(targetName)}`,
+          email: payload.email,
+          name: payload.name,
+          password: payload.password,
+          google_id: payload.google_id,
+          avatar_url: payload.avatar_url,
+          id_token: payload.id_token,
+          verified_email: payload.verified_email,
           accounts: emailAccounts && emailAccounts.length > 0 ? emailAccounts : undefined,
         }),
       });
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.detail || 'Google sign-in failed.');
+        throw new Error(data.detail || 'Google OAuth verification failed.');
       }
 
       let displayMsg = data.message;
@@ -245,17 +224,68 @@ export default function AuthModal({
         displayMsg += ` (${data.email_status.message})`;
       }
       setSuccessMsg(displayMsg);
-      setGooglePromptOpen(false);
 
       setTimeout(() => {
-        onLoginSuccess(data.user, data.token, data.email_status, data.is_new_user);
+        onLoginSuccess(data.user, data.token, data.email_status, data.is_new_user, {
+          isGoogleOAuth: true,
+          googleId: payload.google_id,
+        });
         handleClose();
-      }, 900);
+      }, 400);
     } catch (err) {
-      setErrorMsg(err.message);
-    } finally {
+      setErrorMsg(err.message || 'Google OAuth authentication failed.');
       setLoading(false);
     }
+  };
+
+  // Launch Traditional Google OAuth Popup
+  const handleOpenGooglePrompt = () => {
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    const width = 500;
+    const height = 620;
+    const left = Math.max(0, Math.floor(window.screenX + (window.outerWidth - width) / 2));
+    const top = Math.max(0, Math.floor(window.screenY + (window.outerHeight - height) / 2));
+
+    const prefillEmail = email.trim();
+    const popupUrl = prefillEmail
+      ? `/oauth-google.html?email=${encodeURIComponent(prefillEmail)}`
+      : '/oauth-google.html';
+
+    const popup = window.open(
+      popupUrl,
+      'GoogleOAuthWindow',
+      `width=${width},height=${height},left=${left},top=${top},status=no,toolbar=no,menubar=no,location=no,resizable=yes,scrollbars=yes`
+    );
+
+    if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+      setErrorMsg('Google OAuth popup was blocked by your browser. Please allow popups for this site and try again.');
+      return;
+    }
+
+    setLoading(true);
+    setSuccessMsg('Waiting for Google authorization in popup window...');
+
+    const messageHandler = async (event) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.data && event.data.type === 'GOOGLE_OAUTH_SUCCESS') {
+        window.removeEventListener('message', messageHandler);
+        if (closedPoll) clearInterval(closedPoll);
+        await handleGoogleOAuthPayload(event.data.payload);
+      }
+    };
+
+    window.addEventListener('message', messageHandler);
+
+    // Poll for user closing popup without authenticating
+    const closedPoll = setInterval(() => {
+      if (popup.closed) {
+        clearInterval(closedPoll);
+        window.removeEventListener('message', messageHandler);
+        setLoading(false);
+      }
+    }, 800);
   };
 
   // Handle Forgot Password Request Code
@@ -404,9 +434,8 @@ export default function AuthModal({
   };
 
   return (
-    <>
-      <Dialog
-        open={open}
+    <Dialog
+      open={open}
         onClose={handleClose}
         maxWidth="xs"
         fullWidth
@@ -981,131 +1010,6 @@ export default function AuthModal({
         )}
       </DialogContent>
     </Dialog>
-
-      {/* GOOGLE OAUTH MODAL / ACCOUNT SELECTOR */}
-      <Dialog
-        open={googlePromptOpen}
-        onClose={() => setGooglePromptOpen(false)}
-        maxWidth="xs"
-        fullWidth
-        PaperProps={{
-          sx: {
-            borderRadius: 3,
-            p: 1,
-            backgroundColor: 'background.paper',
-            backgroundImage: 'none',
-            border: '1px solid',
-            borderColor: 'divider',
-            boxShadow: (theme) =>
-              theme.palette.mode === 'dark'
-                ? '0 20px 40px -8px rgba(0, 0, 0, 0.7), 0 0 20px rgba(59, 130, 246, 0.1)'
-                : '0 20px 35px -10px rgba(0, 0, 0, 0.12)',
-          },
-        }}
-      >
-        <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1, backgroundColor: 'background.paper' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2 }}>
-            <svg width="22" height="22" viewBox="0 0 24 24">
-              <path
-                fill="#4285F4"
-                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-              />
-              <path
-                fill="#34A853"
-                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-              />
-              <path
-                fill="#FBBC05"
-                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-              />
-              <path
-                fill="#EA4335"
-                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-              />
-            </svg>
-            <Typography variant="h6" fontWeight="bold" color="text.primary">
-              Sign in with Google
-            </Typography>
-          </Box>
-          <IconButton size="small" onClick={() => setGooglePromptOpen(false)} sx={{ color: 'text.secondary' }}>
-            <CloseIcon fontSize="small" />
-          </IconButton>
-        </DialogTitle>
-
-        <DialogContent sx={{ pt: 1, backgroundColor: 'background.paper' }}>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Choose or enter your Google account. First-time sign-ups will receive a rich onboarding welcome email.
-          </Typography>
-          <Box
-            component="form"
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleGoogleSignIn(googleEmail, googleName);
-            }}
-          >
-            <TextField
-              label="Google / Gmail Address"
-              fullWidth
-              size="small"
-              type="email"
-              value={googleEmail}
-              onChange={(e) => setGoogleEmail(e.target.value)}
-              disabled={loading}
-              sx={{ mb: 2 }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <EmailOutlinedIcon fontSize="small" color="action" />
-                  </InputAdornment>
-                ),
-              }}
-            />
-
-            <TextField
-              label="Full Name (Account Profile)"
-              fullWidth
-              size="small"
-              value={googleName}
-              onChange={(e) => setGoogleName(e.target.value)}
-              disabled={loading}
-              sx={{ mb: 2.5 }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <PersonOutlineIcon fontSize="small" color="action" />
-                  </InputAdornment>
-                ),
-              }}
-            />
-
-            <Stack direction="row" spacing={1.5} justifyContent="flex-end">
-              <Button
-                variant="outlined"
-                color="inherit"
-                onClick={() => setGooglePromptOpen(false)}
-                disabled={loading}
-                sx={{ textTransform: 'none' }}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                variant="contained"
-                disabled={loading || !googleEmail.trim()}
-                startIcon={loading ? <CircularProgress size={16} color="inherit" /> : null}
-                sx={{
-                  textTransform: 'none',
-                  fontWeight: 700,
-                  background: 'linear-gradient(135deg, #4285F4 0%, #1a73e8 100%)',
-                }}
-              >
-                {loading ? 'Authenticating...' : 'Authorize & Sign In'}
-              </Button>
-            </Stack>
-          </Box>
-        </DialogContent>
-      </Dialog>
-    </>
   );
 }
 

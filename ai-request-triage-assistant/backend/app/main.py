@@ -41,7 +41,10 @@ from app.models import (
     MultimodalChatRequest,
     MultimodalChatResponse,
     KnowledgeBaseDocument,
+    SpeechCorrectionRequest,
+    SpeechCorrectionResponse,
 )
+from app.speech_service import correct_and_rewrite_speech_query
 from app.rag_service import (
     run_multimodal_rag_chat,
     get_knowledge_base_documents,
@@ -747,6 +750,32 @@ def get_knowledge_base_endpoint():
     Returns the indexed enterprise operational knowledge base modules for inspection and transparency.
     """
     return get_knowledge_base_documents()
+
+
+# ==============================================================================
+# Speech Recognition & Query Auto-Correction Endpoints
+# ==============================================================================
+
+@app.post("/api/ai/correct-speech-query", response_model=SpeechCorrectionResponse, tags=["AI Speech & Enhancements"])
+def correct_speech_query_endpoint(payload: SpeechCorrectionRequest):
+    """
+    Auto-corrects grammar, spelling mistakes, phonetic recognition slips, and domain terminology
+    from raw microphone speech input and rewrites it into a clean, well-formatted query.
+    """
+    try:
+        result = correct_and_rewrite_speech_query(
+            text=payload.text,
+            api_key=payload.api_key,
+            context=payload.context,
+        )
+        return result
+    except Exception as exc:
+        logger.error(f"Error in speech query correction endpoint: {exc}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Speech query auto-correction failed: {str(exc)}",
+        )
+
 
 
 

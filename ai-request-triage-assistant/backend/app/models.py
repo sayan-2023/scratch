@@ -436,4 +436,20 @@ class KnowledgeBaseDocument(BaseModel):
     tags: List[str]
 
 
+class SpeechCorrectionRequest(BaseModel):
+    """Payload for auto-correcting speech recognition transcripts."""
+    text: str = Field(..., min_length=1, description="Raw speech recognition transcript")
+    api_key: Optional[str] = Field(default=None, description="Optional Gemini API key")
+    context: Optional[str] = Field(default="general", description="'website_guide' or 'workspace' or 'general'")
+
+
+class SpeechCorrectionResponse(BaseModel):
+    """Result of speech correction and grammar/spelling rewriting."""
+    original_text: str
+    corrected_text: str
+    changes_made: bool
+    latency_ms: float = 0.0
+
+
+
 

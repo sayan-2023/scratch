@@ -32,6 +32,11 @@ import MenuBookIcon from '@mui/icons-material/MenuBook';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import MicIcon from '@mui/icons-material/Mic';
+import MicOffIcon from '@mui/icons-material/MicOff';
+import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
+import UndoIcon from '@mui/icons-material/Undo';
+import GraphicEqIcon from '@mui/icons-material/GraphicEq';
 
 import { useColorMode } from '../ThemeContext';
 
@@ -104,6 +109,31 @@ export default function MultimodalRagChatModal({ open, onClose, apiKey = '', mod
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
+
+  // Speech Recognition & Auto-Correction state
+  const [isListening, setIsListening] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(true);
+  const [aiAutoCorrectEnabled, setAiAutoCorrectEnabled] = useState(true);
+  const [isCorrectingSpeech, setIsCorrectingSpeech] = useState(false);
+  const [speechCorrectionNotice, setSpeechCorrectionNotice] = useState(null); // { original, corrected, changesMade }
+
+  const recognitionRef = useRef(null);
+  const latestTranscriptRef = useRef('');
+  const autoCorrectRef = useRef(aiAutoCorrectEnabled);
+  const apiKeyRef = useRef(apiKey);
+  const modeRef = useRef(mode);
+
+  useEffect(() => {
+    autoCorrectRef.current = aiAutoCorrectEnabled;
+  }, [aiAutoCorrectEnabled]);
+
+  useEffect(() => {
+    apiKeyRef.current = apiKey;
+  }, [apiKey]);
+
+  useEffect(() => {
+    modeRef.current = mode;
+  }, [mode]);
 
   // Knowledge Base drawer state
   const [showKbDrawer, setShowKbDrawer] = useState(false);
@@ -244,6 +274,139 @@ I am grounded in our verified operational knowledge base:
     window.addEventListener('paste', handlePaste);
     return () => window.removeEventListener('paste', handlePaste);
   }, [open, isWebsiteGuide]);
+
+  // Web Speech API Speech Recognition Initialization
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setSpeechSupported(false);
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      recognition.onstart = () => {
+        setIsListening(true);
+        latestTranscriptRef.current = '';
+        setSpeechCorrectionNotice(null);
+      };
+
+      recognition.onresult = (event) => {
+        let interim = '';
+        let finalTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          const chunk = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += chunk;
+          } else {
+            interim += chunk;
+          }
+        }
+        const captured = (finalTranscript || interim).trim();
+        if (captured) {
+          latestTranscriptRef.current = captured;
+          setInputQuery(captured);
+        }
+      };
+
+      recognition.onerror = (event) => {
+        console.warn('Speech recognition error:', event.error);
+        setIsListening(false);
+      };
+
+      recognition.onend = async () => {
+        setIsListening(false);
+        const rawTranscript = latestTranscriptRef.current.trim();
+        if (!rawTranscript) return;
+
+        if (autoCorrectRef.current) {
+          // Trigger AI Auto-Correction & Grammar/Spelling Rewriting
+          setIsCorrectingSpeech(true);
+          try {
+            const res = await fetch('/api/ai/correct-speech-query', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                text: rawTranscript,
+                api_key: apiKeyRef.current || undefined,
+                context: modeRef.current,
+              }),
+            });
+            if (res.ok) {
+              const data = await res.json();
+              if (data.corrected_text) {
+                setInputQuery(data.corrected_text);
+                if (data.changes_made) {
+                  setSpeechCorrectionNotice({
+                    original: rawTranscript,
+                    corrected: data.corrected_text,
+                    changesMade: true,
+                  });
+                }
+              }
+            }
+          } catch (err) {
+            console.warn('Speech auto-correct failed:', err);
+          } finally {
+            setIsCorrectingSpeech(false);
+          }
+        }
+      };
+
+      recognitionRef.current = recognition;
+    } catch (err) {
+      console.warn('SpeechRecognition init error:', err);
+      setSpeechSupported(false);
+    }
+
+    return () => {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.abort();
+        } catch (e) {}
+      }
+    };
+  }, []);
+
+  const handleToggleListening = () => {
+    if (!speechSupported) {
+      alert('Speech recognition is not supported in this browser. Please use Chrome, Edge, or Safari.');
+      return;
+    }
+
+    if (isListening) {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {}
+      }
+      setIsListening(false);
+    } else {
+      latestTranscriptRef.current = '';
+      setSpeechCorrectionNotice(null);
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.start();
+        } catch (e) {
+          try {
+            recognitionRef.current.stop();
+            setTimeout(() => recognitionRef.current?.start(), 150);
+          } catch (err) {}
+        }
+      }
+    }
+  };
+
+  const handleUndoSpeechCorrection = () => {
+    if (speechCorrectionNotice?.original) {
+      setInputQuery(speechCorrectionNotice.original);
+      setSpeechCorrectionNotice(null);
+    }
+  };
 
   const processImageFile = (file) => {
     if (!file) return;
@@ -1234,6 +1397,61 @@ I am grounded in our verified operational knowledge base:
           zIndex: 10,
         }}
       >
+        {/* Spoken Query Auto-Correction Notice Banner */}
+        {speechCorrectionNotice && speechCorrectionNotice.changesMade && (
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              px: 1.5,
+              py: 0.6,
+              mb: 1,
+              borderRadius: 2,
+              backgroundColor: isDark ? 'rgba(139, 92, 246, 0.15)' : '#f3e8ff',
+              border: isDark ? '1px solid rgba(139, 92, 246, 0.35)' : '1px solid #d8b4fe',
+              animation: 'fadeIn 0.25s ease-out',
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8, overflow: 'hidden' }}>
+              <AutoAwesomeIcon sx={{ fontSize: 16, color: '#a855f7', flexShrink: 0 }} />
+              <Typography
+                variant="caption"
+                sx={{
+                  color: isDark ? '#e9d5ff' : '#6b21a8',
+                  fontWeight: 700,
+                  fontSize: '0.74rem',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                ✨ Spoken query auto-corrected for grammar & spelling
+              </Typography>
+            </Box>
+            <Button
+              size="small"
+              startIcon={<UndoIcon sx={{ fontSize: 13 }} />}
+              onClick={handleUndoSpeechCorrection}
+              sx={{
+                minWidth: 'auto',
+                py: 0.2,
+                px: 1,
+                fontSize: '0.7rem',
+                fontWeight: 700,
+                color: isDark ? '#93c5fd' : '#2563eb',
+                textTransform: 'none',
+                flexShrink: 0,
+                '&:hover': {
+                  backgroundColor: isDark ? 'rgba(59, 130, 246, 0.15)' : '#eff6ff',
+                },
+              }}
+            >
+              Undo
+            </Button>
+          </Box>
+        )}
+
         <Box
           sx={{
             display: 'flex',
@@ -1243,8 +1461,15 @@ I am grounded in our verified operational knowledge base:
             borderRadius: 3,
             p: '4px 8px',
             border: '1px solid',
-            borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : '#cbd5e1',
+            borderColor: isListening
+              ? '#ef4444'
+              : isDark
+              ? 'rgba(255, 255, 255, 0.1)'
+              : '#cbd5e1',
             transition: 'all 0.2s ease',
+            boxShadow: isListening
+              ? '0 0 16px rgba(239, 68, 68, 0.35)'
+              : 'none',
             '&:focus-within': {
               borderColor: '#a855f7',
               boxShadow: '0 0 16px rgba(168, 85, 247, 0.25)',
@@ -1278,13 +1503,120 @@ I am grounded in our verified operational knowledge base:
             </Tooltip>
           )}
 
+          {/* Microphone Voice Capture Button */}
+          <Tooltip
+            title={
+              isListening
+                ? 'Listening... Click to finish speaking'
+                : 'Microphone (Click to speak your question)'
+            }
+          >
+            <IconButton
+              size="small"
+              onClick={handleToggleListening}
+              sx={{
+                color: isListening ? '#ffffff' : isDark ? '#94a3b8' : '#64748b',
+                backgroundColor: isListening ? '#ef4444' : 'transparent',
+                border: isListening ? '1px solid #dc2626' : '1px solid transparent',
+                transition: 'all 0.2s ease',
+                position: 'relative',
+                '&:hover': {
+                  color: isListening ? '#ffffff' : '#a855f7',
+                  backgroundColor: isListening
+                    ? '#dc2626'
+                    : isDark
+                    ? 'rgba(139, 92, 246, 0.12)'
+                    : '#f3e8ff',
+                },
+                ...(isListening && {
+                  animation: 'pulseRecordRing 1.3s infinite',
+                  '@keyframes pulseRecordRing': {
+                    '0%, 100%': { transform: 'scale(1)', boxShadow: '0 0 0 0 rgba(239, 68, 68, 0.6)' },
+                    '50%': { transform: 'scale(1.08)', boxShadow: '0 0 0 6px rgba(239, 68, 68, 0)' },
+                  },
+                }),
+              }}
+            >
+              {isListening ? <GraphicEqIcon sx={{ fontSize: 19 }} /> : <MicIcon sx={{ fontSize: 20 }} />}
+            </IconButton>
+          </Tooltip>
+
+          {/* AI Auto-Correct Toggle Button (Beside Microphone) */}
+          <Tooltip
+            title={
+              aiAutoCorrectEnabled
+                ? 'AI Speech Auto-Correct: ON (Fixes grammar & spelling automatically)'
+                : 'AI Speech Auto-Correct: OFF (Keeps raw spoken transcript)'
+            }
+          >
+            <IconButton
+              size="small"
+              onClick={() => {
+                const next = !aiAutoCorrectEnabled;
+                setAiAutoCorrectEnabled(next);
+                if (!next) setSpeechCorrectionNotice(null);
+              }}
+              sx={{
+                color: aiAutoCorrectEnabled
+                  ? isDark
+                    ? '#c084fc'
+                    : '#7c3aed'
+                  : isDark
+                  ? '#475569'
+                  : '#94a3b8',
+                backgroundColor: aiAutoCorrectEnabled
+                  ? isDark
+                    ? 'rgba(139, 92, 246, 0.18)'
+                    : '#ede9fe'
+                  : 'transparent',
+                border: aiAutoCorrectEnabled
+                  ? isDark
+                    ? '1px solid rgba(139, 92, 246, 0.45)'
+                    : '1px solid #c4b5fd'
+                  : '1px solid transparent',
+                position: 'relative',
+                transition: 'all 0.2s ease',
+                '&:hover': {
+                  backgroundColor: aiAutoCorrectEnabled
+                    ? isDark
+                      ? 'rgba(139, 92, 246, 0.3)'
+                      : '#ddd6fe'
+                    : isDark
+                    ? 'rgba(255, 255, 255, 0.05)'
+                    : '#f1f5f9',
+                },
+              }}
+            >
+              <AutoFixHighIcon sx={{ fontSize: 18 }} />
+              {/* Active green dot indicator */}
+              {aiAutoCorrectEnabled && (
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    bottom: 2,
+                    right: 2,
+                    width: 6,
+                    height: 6,
+                    borderRadius: '50%',
+                    backgroundColor: '#10b981',
+                    boxShadow: '0 0 4px #10b981',
+                  }}
+                />
+              )}
+            </IconButton>
+          </Tooltip>
+
           {/* Text Input */}
           <TextField
             fullWidth
             multiline
             maxRows={4}
             placeholder={
-              isWebsiteGuide
+              isListening
+                ? '🎙️ Listening... speak your query now (click mic when done)...'
+                : isCorrectingSpeech
+                ? '✨ AI is auto-correcting grammar & spelling...'
+                : isWebsiteGuide
                 ? 'Ask how this website works, its architecture, or features...'
                 : 'Ask Nova about SLAs, routing, webhooks, or drop a screenshot...'
             }
@@ -1307,11 +1639,22 @@ I am grounded in our verified operational knowledge base:
             }}
           />
 
+          {/* Inline Speech Auto-Correction Spinner */}
+          {isCorrectingSpeech && (
+            <Tooltip title="AI is checking grammar & spelling...">
+              <CircularProgress size={18} sx={{ color: '#a855f7', mr: 0.5, flexShrink: 0 }} />
+            </Tooltip>
+          )}
+
           {/* Send Button */}
           <Button
             variant="contained"
             size="small"
-            disabled={loading || (isWebsiteGuide ? !inputQuery.trim() : (!inputQuery.trim() && !attachedImage))}
+            disabled={
+              loading ||
+              isCorrectingSpeech ||
+              (isWebsiteGuide ? !inputQuery.trim() : !inputQuery.trim() && !attachedImage)
+            }
             onClick={() => handleSendMessage()}
             sx={{
               minWidth: 42,
@@ -1337,12 +1680,12 @@ I am grounded in our verified operational knowledge base:
 
         {/* Bottom Helper text */}
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 0.8, px: 0.5 }}>
-          <Typography variant="caption" sx={{ color: isDark ? '#475569' : '#94a3b8', fontSize: '0.68rem' }}>
-            {isWebsiteGuide ? (
-              <>Press <strong>Enter</strong> to send • Grounded in Platform Docs [KB-PLATFORM-08, KB-AGENT-07]</>
-            ) : (
-              <>Press <strong>Enter</strong> to send • <strong>Shift+Enter</strong> for newline • <strong>Ctrl+V</strong> to paste images</>
-            )}
+          <Typography variant="caption" sx={{ color: isDark ? '#475569' : '#94a3b8', fontSize: '0.68rem', display: 'flex', alignItems: 'center', gap: 0.8 }}>
+            <span>🎙️ <strong>Click mic</strong> to speak</span>
+            <span>•</span>
+            <span style={{ color: aiAutoCorrectEnabled ? (isDark ? '#c084fc' : '#7c3aed') : 'inherit', fontWeight: aiAutoCorrectEnabled ? 700 : 400 }}>
+              ✨ AI Auto-Correct: {aiAutoCorrectEnabled ? 'ON' : 'OFF'}
+            </span>
           </Typography>
           <Typography variant="caption" sx={{ color: isDark ? '#475569' : '#94a3b8', fontSize: '0.68rem' }}>
             {isWebsiteGuide ? 'Platform & Architecture Guide' : 'Grounded by Gemini 2.5 & LangGraph'}

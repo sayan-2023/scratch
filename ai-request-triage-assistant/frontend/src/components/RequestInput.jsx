@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -10,11 +10,22 @@ import {
   Stack,
   Chip,
   Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  IconButton,
 } from '@mui/material';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import ClearIcon from '@mui/icons-material/Clear';
 import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
 import ForumIcon from '@mui/icons-material/Forum';
+import BookmarkAddIcon from '@mui/icons-material/BookmarkAdd';
+import CloseIcon from '@mui/icons-material/Close';
 
 export default function RequestInput({
   requestText,
@@ -25,8 +36,40 @@ export default function RequestInput({
   activeSample,
   hasApiKey,
   onOpenKeyModal,
+  onSaveAsPreset,
 }) {
   const isSubmitDisabled = loading || !requestText.trim() || requestText.trim().length < 5;
+
+  const [isBookmarkModalOpen, setIsBookmarkModalOpen] = useState(false);
+  const [presetTitle, setPresetTitle] = useState('');
+  const [presetSender, setPresetSender] = useState('');
+  const [presetChannel, setPresetChannel] = useState('Email');
+  const [presetCategory, setPresetCategory] = useState('Support');
+  const [presetPriority, setPresetPriority] = useState('Medium');
+
+  const handleOpenBookmark = () => {
+    setPresetTitle(activeSample?.title ? `${activeSample.title} (Copy)` : 'Custom Inquiry Scenario');
+    setPresetSender(activeSample?.sender || 'Client Name (Company)');
+    setPresetChannel(activeSample?.channel || 'Email');
+    setPresetCategory(activeSample?.expected_category || 'Support');
+    setPresetPriority(activeSample?.expected_priority || 'Medium');
+    setIsBookmarkModalOpen(true);
+  };
+
+  const handleConfirmSavePreset = async () => {
+    if (!presetTitle.trim() || !presetSender.trim()) return;
+    if (onSaveAsPreset) {
+      await onSaveAsPreset({
+        title: presetTitle.trim(),
+        sender: presetSender.trim(),
+        channel: presetChannel.trim(),
+        expected_category: presetCategory,
+        expected_priority: presetPriority,
+        text: requestText.trim(),
+      });
+    }
+    setIsBookmarkModalOpen(false);
+  };
 
   return (
     <Card sx={{ mb: 3 }}>
@@ -90,12 +133,26 @@ export default function RequestInput({
           </Alert>
         )}
 
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2, flexWrap: 'wrap', gap: 1 }}>
           <Typography variant="caption" color="text.secondary">
             {requestText.length} characters
           </Typography>
 
-          <Stack direction="row" spacing={1.5}>
+          <Stack direction="row" spacing={1.5} alignItems="center">
+            {requestText && requestText.trim().length >= 5 && (
+              <Button
+                variant="outlined"
+                color="secondary"
+                onClick={handleOpenBookmark}
+                disabled={loading}
+                startIcon={<BookmarkAddIcon />}
+                size="small"
+                sx={{ textTransform: 'none' }}
+              >
+                Save as Preset
+              </Button>
+            )}
+
             {requestText && (
               <Button
                 variant="outlined"
@@ -122,7 +179,93 @@ export default function RequestInput({
           </Stack>
         </Box>
       </CardContent>
+
+      {/* Save as Preset Modal */}
+      <Dialog open={isBookmarkModalOpen} onClose={() => setIsBookmarkModalOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <BookmarkAddIcon color="primary" />
+            <Typography variant="h6" fontWeight="bold">
+              Save as Scenario Preset
+            </Typography>
+          </Box>
+          <IconButton size="small" onClick={() => setIsBookmarkModalOpen(false)}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent dividers>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            <TextField
+              label="Preset Title"
+              size="small"
+              fullWidth
+              value={presetTitle}
+              onChange={(e) => setPresetTitle(e.target.value)}
+            />
+
+            <Stack direction="row" spacing={2}>
+              <TextField
+                label="Sender & Role"
+                size="small"
+                fullWidth
+                value={presetSender}
+                onChange={(e) => setPresetSender(e.target.value)}
+              />
+              <TextField
+                label="Channel"
+                size="small"
+                fullWidth
+                value={presetChannel}
+                onChange={(e) => setPresetChannel(e.target.value)}
+              />
+            </Stack>
+
+            <Stack direction="row" spacing={2}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Category</InputLabel>
+                <Select
+                  value={presetCategory}
+                  label="Category"
+                  onChange={(e) => setPresetCategory(e.target.value)}
+                >
+                  <MenuItem value="Technical">Technical</MenuItem>
+                  <MenuItem value="Billing">Billing</MenuItem>
+                  <MenuItem value="Sales">Sales</MenuItem>
+                  <MenuItem value="Support">Support</MenuItem>
+                  <MenuItem value="Other">Other</MenuItem>
+                </Select>
+              </FormControl>
+
+              <FormControl fullWidth size="small">
+                <InputLabel>Priority</InputLabel>
+                <Select
+                  value={presetPriority}
+                  label="Priority"
+                  onChange={(e) => setPresetPriority(e.target.value)}
+                >
+                  <MenuItem value="Low">Low</MenuItem>
+                  <MenuItem value="Medium">Medium</MenuItem>
+                  <MenuItem value="High">High</MenuItem>
+                  <MenuItem value="Urgent">Urgent</MenuItem>
+                </Select>
+              </FormControl>
+            </Stack>
+          </Stack>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2 }}>
+          <Button onClick={() => setIsBookmarkModalOpen(false)} color="inherit">
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleConfirmSavePreset}
+            disabled={!presetTitle.trim() || !presetSender.trim()}
+          >
+            Save Preset
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Card>
   );
 }
-

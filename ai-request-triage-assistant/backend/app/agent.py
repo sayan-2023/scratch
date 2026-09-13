@@ -13,6 +13,8 @@ from app.models import (
     OwnerEnum,
     TriageAnalysis,
     TriageOutput,
+    GeneratedSamplePromptSchema,
+    SampleRequest,
 )
 
 load_dotenv()
@@ -211,4 +213,74 @@ def run_triage(
         draft_response=final_state["draft_response"],
         processing_time_ms=duration_ms,
     )
+
+
+def generate_dynamic_scenario(
+    category: Optional[CategoryEnum] = None,
+    priority: Optional[PriorityEnum] = None,
+    industry: Optional[str] = None,
+    api_key: Optional[str] = None,
+    model_name: str = "gemini-2.5-flash",
+) -> SampleRequest:
+    """Uses Gemini structured output to dynamically synthesize an authentic customer request scenario."""
+    import uuid
+    import random
+
+    llm = get_llm(api_key=api_key, model_name=model_name)
+    structured_llm = llm.with_structured_output(GeneratedSamplePromptSchema)
+
+    industries = [
+        "FinTech & Banking",
+        "Healthcare & Telehealth",
+        "E-Commerce & Retail Logistics",
+        "Enterprise Cloud & DevOps",
+        "LegalTech & Contract Management",
+        "Cybersecurity & Threat Detection",
+    ]
+    chosen_industry = industry or random.choice(industries)
+
+    target_category_str = (
+        f"Target Category: {category.value}"
+        if category
+        else "Choose an authentic category (Sales, Support, Billing, Technical, or Other)"
+    )
+    target_priority_str = (
+        f"Target Urgency: {priority.value}"
+        if priority
+        else "Choose an appropriate urgency level (Urgent, High, Medium, or Low)"
+    )
+
+    prompt = f"""You are a realistic customer inquiry simulator for enterprise business software.
+Generate an authentic, unstructured incoming customer communication.
+
+Industry Context: {chosen_industry}
+{target_category_str}
+{target_priority_str}
+
+Guidelines:
+- The inquiry should sound natural, slightly messy, and specific to the industry and situation.
+- Include realistic specifics: timestamps, ticket or invoice numbers, impacted users, dollar figures, or emotional urgency where appropriate.
+- Origin channel should be authentic (e.g. 'Email (billing@)', 'Live Chat / Emergency Helpdesk', 'Inbound Sales Contact Form', 'Customer Support Portal').
+- Sender should look real: 'Full Name (Title, Company Name)'.
+- The expected_category and expected_priority must accurately reflect the generated scenario.
+"""
+
+    messages = [
+        SystemMessage(content=prompt),
+        HumanMessage(content="Generate a fresh, realistic scenario preset now."),
+    ]
+
+    result: GeneratedSamplePromptSchema = structured_llm.invoke(messages)
+
+    return SampleRequest(
+        id=f"ai-{uuid.uuid4().hex[:6]}",
+        title=result.title,
+        channel=result.channel,
+        sender=result.sender,
+        text=result.text,
+        expected_category=result.expected_category,
+        expected_priority=result.expected_priority,
+        is_custom=True,
+    )
+
 

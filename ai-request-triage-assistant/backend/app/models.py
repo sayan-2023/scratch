@@ -77,6 +77,70 @@ class SampleRequest(BaseModel):
     text: str
     expected_category: CategoryEnum
     expected_priority: PriorityEnum
+    is_custom: bool = Field(default=False, description="True if user-created or dynamically generated")
+
+
+class SampleCreateInput(BaseModel):
+    """Input payload to create a new custom preset scenario."""
+    title: str = Field(..., min_length=2, description="Short title for scenario preset")
+    channel: str = Field(default="Web Form", description="Origin channel e.g. Email, Chat, Form")
+    sender: str = Field(..., min_length=2, description="Sender name & role/company")
+    text: str = Field(..., min_length=5, description="Full unstructured request text")
+    expected_category: CategoryEnum = Field(default=CategoryEnum.SUPPORT)
+    expected_priority: PriorityEnum = Field(default=PriorityEnum.MEDIUM)
+
+
+class GenerateSampleInput(BaseModel):
+    """Input payload to request an AI-generated scenario."""
+    category: Optional[CategoryEnum] = Field(default=None, description="Target category or None for random")
+    priority: Optional[PriorityEnum] = Field(default=None, description="Target urgency or None for random")
+    industry: Optional[str] = Field(default=None, description="Optional industry context e.g. Healthcare, Fintech, SaaS")
+    api_key: Optional[str] = Field(default=None, description="Optional Gemini API key")
+
+
+class GeneratedSamplePromptSchema(BaseModel):
+    """Schema used by Gemini structured output for synthesizing realistic requests."""
+    title: str = Field(description="Short descriptive scenario title, 3 to 6 words")
+    channel: str = Field(description="Origin channel like 'Email (support@)', 'Live Chat / Emergency Form', 'Website Form'")
+    sender: str = Field(description="Name, title, and company e.g. 'Marcus Vance (CTO, Apex Dynamics)'")
+    text: str = Field(description="Authentic, realistic, unstructured client inquiry message body")
+    expected_category: CategoryEnum = Field(description="Primary category")
+    expected_priority: PriorityEnum = Field(description="Primary urgency level")
+
+
+class InboxMessage(BaseModel):
+    """Inbound message item in the live / simulated webhook queue."""
+    id: str
+    source: str = Field(default="Webhook", description="Source provider or origin: Zendesk, Stripe, Webhook, Form")
+    sender: str
+    channel: str = "Webhook"
+    subject: Optional[str] = None
+    body: str
+    timestamp: str
+    status: str = "pending"  # "pending" | "triaged"
+    triage_result: Optional[TriageOutput] = None
+
+
+class WebhookIngestInput(BaseModel):
+    """Payload accepted by the live webhook ingestion endpoint."""
+    source: str = Field(default="Webhook", description="Source provider e.g. Stripe, Zendesk, Web Form, Hubspot")
+    sender: str = Field(default="Inbound Client", description="Sender name, email or identifier")
+    channel: Optional[str] = Field(default="Webhook", description="Inbound communication channel")
+    subject: Optional[str] = Field(default=None, description="Optional subject line")
+    body: str = Field(..., min_length=5, description="Raw unstructured message body or payload text")
+    auto_triage: bool = Field(default=False, description="Whether to automatically run triage upon ingestion")
+    api_key: Optional[str] = Field(default=None, description="Optional Gemini API key for auto-triage")
+
+
+class InboxSimulationRequest(BaseModel):
+    """Request to inject a realistic simulated webhook event."""
+    scenario_type: str = Field(
+        default="random",
+        description="Type of simulation: 'stripe_chargeback', 'zendesk_outage', 'contact_form', 'security_inquiry', or 'random'"
+    )
+    auto_triage: bool = Field(default=False)
+    api_key: Optional[str] = None
+
 
 
 class EmailAccount(BaseModel):
@@ -158,4 +222,86 @@ class TestEmailAccountResponse(BaseModel):
     success: bool
     message: str
     details: Optional[Dict[str, Any]] = None
+
+
+# ==============================================================================
+# Authentication & Persistent Session History Models
+# ==============================================================================
+
+class User(BaseModel):
+    """Internal user model including hashed credentials."""
+    id: str
+    email: str
+    name: str
+    password_hash: str
+    role: str = "User"  # "Admin" | "User"
+    avatar_url: Optional[str] = None
+    created_at: str
+
+
+class UserPublic(BaseModel):
+    """Public user profile returned to the frontend."""
+    id: str
+    email: str
+    name: str
+    role: str
+    avatar_url: Optional[str] = None
+    created_at: str
+
+
+class LoginRequest(BaseModel):
+    """Credentials payload for logging in."""
+    email_or_username: str = Field(..., min_length=3, description="User email address or user ID")
+    password: str = Field(..., min_length=4, description="Account password")
+
+
+class RegisterRequest(BaseModel):
+    """Registration payload for new account creation."""
+    name: str = Field(..., min_length=2, description="Full name or team handle")
+    email: str = Field(..., min_length=5, description="Corporate email address")
+    password: str = Field(..., min_length=6, description="Account password (min 6 characters)")
+
+
+class GoogleAuthRequest(BaseModel):
+    """Payload for Google OAuth / Gmail sign-in."""
+    email: str
+    name: str
+    google_id: Optional[str] = None
+    avatar_url: Optional[str] = None
+
+
+class ForgotPasswordRequest(BaseModel):
+    """Payload to initiate a password reset verification code."""
+    email: str
+
+
+class ResetPasswordRequest(BaseModel):
+    """Payload to confirm password reset using verification code."""
+    email: str
+    reset_code: str
+    new_password: str = Field(..., min_length=6, description="New password (min 6 characters)")
+
+
+class AuthResponse(BaseModel):
+    """Authentication result with session token and public profile."""
+    success: bool
+    token: str
+    user: UserPublic
+    message: str
+
+
+class UserHistoryItem(BaseModel):
+    """Persistent triage activity item preserved across logins/logouts."""
+    id: str
+    user_id: str
+    text: str
+    result: TriageOutput
+    timestamp: str
+
+
+class SaveHistoryRequest(BaseModel):
+    """Request to append a completed triage execution to user history."""
+    text: str
+    result: TriageOutput
+
 

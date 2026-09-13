@@ -1,0 +1,119 @@
+[
+  {
+    "id": "usr-admin-01",
+    "email": "admin@triage.ai",
+    "name": "Admin User",
+    "password_hash": "2a07c6239718fe9c5f422c1449f17ac8c74ab9dd93e342f2e7a6b3f523cbb274",
+    "role": "Admin",
+    "avatar_url": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&h=120&q=80",
+    "created_at": "2026-01-01 00:00:00"
+  },
+  {
+    "id": "usr-aa8ec9",
+    "email": "analyst@testcorp.com",
+    "name": "Test Analyst",
+    "password_hash": "6b8ac8d7212dbd1b56a26bb0a8c1bd49f9afb8216fd599dfdcf8444a113102a6",
+    "role": "User",
+    "avatar_url": "https://api.dicebear.com/7.x/initials/svg?seed=Test Analyst",
+    "created_at": "2026-09-13 18:40:42"
+  },
+  {
+    "id": "usr-g-f1cb2a",
+    "email": "googleuser@gmail.com",
+    "name": "Google User",
+    "password_hash": "ad664330dd08ea7cb5a0a3375dd3de910ede736269458f0ec6061353e3ed9860",
+    "role": "User",
+    "avatar_url": "https://api.dicebear.com/7.x/initials/svg?seed=Google User",
+    "created_at": "2026-09-13 18:40:42"
+  },
+  {
+    "id": "usr-7265c6",
+    "email": "sarah.connor@cyberdyne.com",
+    "name": "Sarah Connor",
+    "password_hash": "cb3fa0c9ffc50ddb1c137e6459227c44694fa90eea0c4b83cf37daac968d7f3b",
+    "role": "User",
+    "avatar_url": "https://api.dicebear.com/7.x/initials/svg?seed=Sarah Connor",
+    "created_at": "2026-09-13 19:02:32"
+  },
+  {
+    "id": "usr-g-bf8b7e",
+    "email": "alex.mercer@gmail.com",
+    "name": "Alex Mercer",
+    "password_hash": "da3ede744850cd119498fb01847b4b4927320cd4b2b29ddc7ab7171fef49baeb",
+    "role": "User",
+    "avatar_url": "https://example.com/avatar.jpg",
+    "created_at": "2026-09-13 19:02:32"
+  },
+  {
+    "id": "usr-4e5bd3",
+    "email": "user_fc5eab@cyberdyne.com",
+    "name": "Sarah Connor",
+    "password_hash": "32fe6d4b30f3649f7fc060c842392942a11d92a92323bdf9d4c7d64c374433f6",
+    "role": "User",
+    "avatar_url": "https://api.dicebear.com/7.x/initials/svg?seed=Sarah Connor",
+    "created_at": "2026-09-13 19:04:15"
+  },
+  {
+    "id": "usr-g-399b04",
+    "email": "alex_fc5eab@gmail.com",
+    "name": "Alex Mercer",
+    "password_hash": "82e3779b332738d7674e1cd15417fa611df9e22991736d930aca5ea2c2dd3dbf",
+    "role": "User",
+    "avatar_url": "https://example.com/avatar.jpg",
+    "created_at": "2026-09-13 19:04:15"
+  },
+  {
+    "id": "usr-47c95e",
+    "email": "reset_user_b9825d@cyberdyne.com",
+    "name": "Reset Tester",
+    "password_hash": "cb3fa0c9ffc50ddb1c137e6459227c44694fa90eea0c4b83cf37daac968d7f3b",
+    "role": "User",
+    "avatar_url": "https://api.dicebear.com/7.x/initials/svg?seed=Reset Tester",
+    "created_at": "2026-09-13 19:04:15"
+  },
+  {
+    "id": "usr-6b10ac",
+    "email": "user_2e499b@cyberdyne.com",
+    "name": "Sarah Connor",
+    "password_hash": "32fe6d4b30f3649f7fc060c842392942a11d92a92323bdf9d4c7d64c374433f6",
+    "role": "User",
+    "avatar_url": "https://api.dicebear.com/7.x/initials/svg?seed=Sarah Connor",
+    "created_at": "2026-09-13 19:04:26"
+  },
+  {
+    "id": "usr-g-81efd1",
+    "email": "alex_2e499b@gmail.com",
+    "name": "Alex Mercer",
+    "password_hash": "ff51952f9889ca12d1154cf824e6275d5e3c6baac7e9357e2e711e0cab036153",
+    "role": "User",
+    "avatar_url": "https://example.com/avatar.jpg",
+    "created_at": "2026-09-13 19:04:26"
+  },
+  {
+    "id": "usr-0b4320",
+    "email": "reset_user_41c084@cyberdyne.com",
+    "name": "Reset Tester",
+    "password_hash": "cb3fa0c9ffc50ddb1c137e6459227c44694fa90eea0c4b83cf37daac968d7f3b",
+    "role": "User",
+    "avatar_url": "https://api.dicebear.com/7.x/initials/svg?seed=Reset Tester",
+    "created_at": "2026-09-13 19:04:26"
+  },
+  {
+    "id": "usr-g-6e1248",
+    "email": "admin.google@triage.ai",
+    "name": "Executive Lead (Google)",
+    "password_hash": "df763ff39b58db41bcfdb7d6dde448eb547def60dc00b7f29afd40fc25b2a289",
+    "role": "User",
+    "avatar_url": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&h=120&q=80",
+    "created_at": "2026-09-13 19:06:17"
+  },
+  {
+    "id": "usr-2cbaac",
+    "email": "sayandutta.ec2025@gmail.com",
+    "name": "sayan_dutta",
+    "password_hash": "cc333a228f9a1bd497c1ff3ccff5e04c9d830be0226f46ca3a57c45b1d76019d",
+    "role": "User",
+    "avatar_url": "https://api.dicebear.com/7.x/initials/svg?seed=sayan_dutta",
+    "created_at": "2026-09-13 19:07:24"
+  }
+]

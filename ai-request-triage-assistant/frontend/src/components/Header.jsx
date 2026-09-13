@@ -7,13 +7,20 @@ import {
   Button,
   Chip,
   Tooltip,
+  Badge,
+  Avatar,
+  Stack,
+  Divider,
 } from '@mui/material';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import KeyIcon from '@mui/icons-material/VpnKey';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import MailOutlineIcon from '@mui/icons-material/MailOutline';
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
+import MoveToInboxIcon from '@mui/icons-material/MoveToInbox';
+import LogoutIcon from '@mui/icons-material/Logout';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
 
 export default function Header({
   onOpenKeyModal,
@@ -22,6 +29,12 @@ export default function Header({
   onOpenEmailModal,
   emailAccountsCount = 0,
   simulationMode = false,
+  onOpenInboxModal,
+  inboxCount = 0,
+  currentUser = null,
+  onOpenAuthModal,
+  onLogout,
+  onNavigateHome,
 }) {
   return (
     <AppBar
@@ -44,7 +57,9 @@ export default function Header({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              cursor: 'pointer',
             }}
+            onClick={onNavigateHome}
           >
             <SmartToyIcon fontSize="medium" />
           </Box>
@@ -58,17 +73,50 @@ export default function Header({
           </Box>
         </Box>
 
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2 }}>
           <Tooltip title={backendOnline ? 'Backend service is reachable' : 'Backend is unreachable'}>
             <Chip
               size="small"
               icon={<CheckCircleIcon fontSize="small" />}
-              label={backendOnline ? 'FastAPI Online' : 'Backend Offline'}
+              label={backendOnline ? 'Online' : 'Offline'}
               color={backendOnline ? 'success' : 'error'}
               variant="outlined"
             />
           </Tooltip>
 
+          {/* Home Landing Page Link */}
+          {onNavigateHome && (
+            <Tooltip title="View Marketing Homepage & Overview">
+              <Button
+                variant="text"
+                color="inherit"
+                size="small"
+                startIcon={<HomeOutlinedIcon />}
+                onClick={onNavigateHome}
+                sx={{ borderRadius: 2, textTransform: 'none', color: '#64748b' }}
+              >
+                Home
+              </Button>
+            </Tooltip>
+          )}
+
+          {/* Inbound Live Feed & Webhook Queue Button */}
+          <Button
+            variant="outlined"
+            color="primary"
+            size="small"
+            startIcon={
+              <Badge badgeContent={inboxCount} color="error" max={99}>
+                <MoveToInboxIcon />
+              </Badge>
+            }
+            onClick={onOpenInboxModal}
+            sx={{ borderRadius: 2 }}
+          >
+            Inbound Feed
+          </Button>
+
+          {/* Email Settings */}
           <Button
             variant={emailAccountsCount > 0 ? 'outlined' : 'contained'}
             color={emailAccountsCount > 0 ? 'inherit' : 'primary'}
@@ -78,10 +126,11 @@ export default function Header({
             sx={{ borderRadius: 2 }}
           >
             {emailAccountsCount > 0
-              ? `${emailAccountsCount} Gmail Account${emailAccountsCount > 1 ? 's' : ''}`
-              : 'Configure Gmail'}
+              ? `${emailAccountsCount} Gmail`
+              : 'Gmail'}
           </Button>
 
+          {/* API Key */}
           <Button
             variant={hasApiKey ? 'outlined' : 'contained'}
             color={hasApiKey ? 'inherit' : 'warning'}
@@ -90,11 +139,75 @@ export default function Header({
             onClick={onOpenKeyModal}
             sx={{ borderRadius: 2 }}
           >
-            {hasApiKey ? 'API Key Configured' : 'Configure API Key'}
+            {hasApiKey ? 'API Key' : 'Set Key'}
           </Button>
+
+          <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
+
+          {/* User Account & Profile */}
+          {currentUser ? (
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Tooltip title={`Signed in as ${currentUser.email}`}>
+                <Chip
+                  avatar={<Avatar src={currentUser.avatar_url}>{currentUser.name[0]}</Avatar>}
+                  label={
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.6 }}>
+                      <span>{currentUser.name}</span>
+                      {currentUser.role === 'Admin' && (
+                        <Typography
+                          component="span"
+                          variant="caption"
+                          sx={{
+                            backgroundColor: '#7c3aed',
+                            color: '#ffffff',
+                            fontWeight: 700,
+                            px: 0.6,
+                            py: 0.1,
+                            borderRadius: 0.8,
+                            fontSize: '0.65rem',
+                          }}
+                        >
+                          Admin
+                        </Typography>
+                      )}
+                    </Box>
+                  }
+                  variant="outlined"
+                  sx={{ borderColor: '#cbd5e1' }}
+                />
+              </Tooltip>
+
+              <Tooltip title="Log out of current session">
+                <Button
+                  variant="outlined"
+                  color="error"
+                  size="small"
+                  onClick={onLogout}
+                  startIcon={<LogoutIcon />}
+                  sx={{ borderRadius: 2, minWidth: 'auto', px: 1.5 }}
+                >
+                  Logout
+                </Button>
+              </Tooltip>
+            </Stack>
+          ) : (
+            <Button
+              variant="contained"
+              color="primary"
+              size="small"
+              startIcon={<LockOutlinedIcon />}
+              onClick={onOpenAuthModal}
+              sx={{
+                borderRadius: 2,
+                background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
+                fontWeight: 600,
+              }}
+            >
+              Sign In
+            </Button>
+          )}
         </Box>
       </Toolbar>
     </AppBar>
   );
 }
-

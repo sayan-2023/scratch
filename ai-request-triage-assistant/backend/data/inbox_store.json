@@ -1,0 +1,156 @@
+[
+  {
+    "id": "sim-9766f5",
+    "source": "Stripe Webhook",
+    "sender": "notifications@stripe.com (re: Dispute dp_9104)",
+    "channel": "Payment Webhook",
+    "subject": "Chargeback Warning: Account Disputed $3,800.00",
+    "body": "Notification from Stripe: Dispute dp_9104 has been raised by cardholder for $3,800.00. Reason: Unrecognized transaction. Please provide invoice proof and service fulfillment logs before Friday 5:00 PM EST to prevent automatic forfeiture.",
+    "timestamp": "2026-09-13 19:04:26",
+    "status": "pending",
+    "triage_result": null
+  },
+  {
+    "id": "sim-936281",
+    "source": "Stripe Webhook",
+    "sender": "notifications@stripe.com (re: Dispute dp_9104)",
+    "channel": "Payment Webhook",
+    "subject": "Chargeback Warning: Account Disputed $3,800.00",
+    "body": "Notification from Stripe: Dispute dp_9104 has been raised by cardholder for $3,800.00. Reason: Unrecognized transaction. Please provide invoice proof and service fulfillment logs before Friday 5:00 PM EST to prevent automatic forfeiture.",
+    "timestamp": "2026-09-13 19:04:15",
+    "status": "pending",
+    "triage_result": null
+  },
+  {
+    "id": "sim-7418cb",
+    "source": "Stripe Webhook",
+    "sender": "notifications@stripe.com (re: Dispute dp_9104)",
+    "channel": "Payment Webhook",
+    "subject": "Chargeback Warning: Account Disputed $3,800.00",
+    "body": "Notification from Stripe: Dispute dp_9104 has been raised by cardholder for $3,800.00. Reason: Unrecognized transaction. Please provide invoice proof and service fulfillment logs before Friday 5:00 PM EST to prevent automatic forfeiture.",
+    "timestamp": "2026-09-13 19:03:58",
+    "status": "pending",
+    "triage_result": null
+  },
+  {
+    "id": "sim-bdf1f0",
+    "source": "Stripe Webhook",
+    "sender": "notifications@stripe.com (re: Dispute dp_9104)",
+    "channel": "Payment Webhook",
+    "subject": "Chargeback Warning: Account Disputed $3,800.00",
+    "body": "Notification from Stripe: Dispute dp_9104 has been raised by cardholder for $3,800.00. Reason: Unrecognized transaction. Please provide invoice proof and service fulfillment logs before Friday 5:00 PM EST to prevent automatic forfeiture.",
+    "timestamp": "2026-09-13 19:02:32",
+    "status": "pending",
+    "triage_result": null
+  },
+  {
+    "id": "sim-de0903",
+    "source": "Stripe Webhook",
+    "sender": "notifications@stripe.com (re: Dispute dp_9104)",
+    "channel": "Payment Webhook",
+    "subject": "Chargeback Warning: Account Disputed $3,800.00",
+    "body": "Notification from Stripe: Dispute dp_9104 has been raised by cardholder for $3,800.00. Reason: Unrecognized transaction. Please provide invoice proof and service fulfillment logs before Friday 5:00 PM EST to prevent automatic forfeiture.",
+    "timestamp": "2026-09-13 18:33:23",
+    "status": "pending",
+    "triage_result": null
+  },
+  {
+    "id": "wh-a1c064",
+    "source": "Zendesk P1",
+    "sender": "ops-lead@partner.com",
+    "channel": "Webhook",
+    "subject": "Critical API Outage",
+    "body": "All payment calls returning HTTP 504. Over 2,000 customers blocked!",
+    "timestamp": "2026-09-13 18:33:01",
+    "status": "pending",
+    "triage_result": null
+  },
+  {
+    "id": "sim-3ce9f6",
+    "source": "Security Portal",
+    "sender": "Liam O'Connor (InfoSec Compliance, Global Logistics)",
+    "channel": "Security Portal",
+    "subject": "Vendor Security Assessment Questionnaire (SOC-2 Type II)",
+    "body": "Good day, We are conducting our annual third-party risk assessment. Please provide your latest SOC-2 Type II report, pentest summary from the past 12 months, and details regarding your data encryption at rest and in transit.",
+    "timestamp": "2026-09-13 18:32:33",
+    "status": "pending",
+    "triage_result": null
+  },
+  {
+    "id": "sim-d160fa",
+    "source": "Stripe Webhook",
+    "sender": "notifications@stripe.com (re: Dispute dp_9104)",
+    "channel": "Payment Webhook",
+    "subject": "Chargeback Warning: Account Disputed $3,800.00",
+    "body": "Notification from Stripe: Dispute dp_9104 has been raised by cardholder for $3,800.00. Reason: Unrecognized transaction. Please provide invoice proof and service fulfillment logs before Friday 5:00 PM EST to prevent automatic forfeiture.",
+    "timestamp": "2026-09-13 18:32:29",
+    "status": "pending",
+    "triage_result": null
+  },
+  {
+    "id": "sim-9421f0",
+    "source": "Stripe Webhook",
+    "sender": "notifications@stripe.com (re: Dispute dp_9104)",
+    "channel": "Payment Webhook",
+    "subject": "Chargeback Warning: Account Disputed $3,800.00",
+    "body": "Notification from Stripe: Dispute dp_9104 has been raised by cardholder for $3,800.00. Reason: Unrecognized transaction. Please provide invoice proof and service fulfillment logs before Friday 5:00 PM EST to prevent automatic forfeiture.",
+    "timestamp": "2026-09-13 18:27:47",
+    "status": "pending",
+    "triage_result": null
+  },
+  {
+    "id": "sim-ac493c",
+    "source": "Stripe Webhook",
+    "sender": "notifications@stripe.com (re: Dispute dp_9104)",
+    "channel": "Payment Webhook",
+    "subject": "Chargeback Warning: Account Disputed $3,800.00",
+    "body": "Notification from Stripe: Dispute dp_9104 has been raised by cardholder for $3,800.00. Reason: Unrecognized transaction. Please provide invoice proof and service fulfillment logs before Friday 5:00 PM EST to prevent automatic forfeiture.",
+    "timestamp": "2026-09-13 18:27:30",
+    "status": "pending",
+    "triage_result": null
+  },
+  {
+    "id": "sim-2c3584",
+    "source": "Stripe Webhook",
+    "sender": "notifications@stripe.com (re: Dispute dp_9104)",
+    "channel": "Payment Webhook",
+    "subject": "Chargeback Warning: Account Disputed $3,800.00",
+    "body": "Notification from Stripe: Dispute dp_9104 has been raised by cardholder for $3,800.00. Reason: Unrecognized transaction. Please provide invoice proof and service fulfillment logs before Friday 5:00 PM EST to prevent automatic forfeiture.",
+    "timestamp": "2026-09-13 18:26:03",
+    "status": "pending",
+    "triage_result": null
+  },
+  {
+    "id": "inbox-msg-1",
+    "source": "Stripe Webhook",
+    "sender": "notifications@stripe.com (re: Dispute dp_9104)",
+    "channel": "Payment Gateway Webhook",
+    "subject": "Chargeback Warning: Account Disputed $3,800.00",
+    "body": "Notification from Stripe: Dispute dp_9104 has been raised by cardholder for $3,800.00. Reason: Unrecognized transaction. Please provide invoice proof and service fulfillment logs before Friday 5:00 PM EST to prevent automatic forfeiture.",
+    "timestamp": "2026-09-13 18:25:06",
+    "status": "pending",
+    "triage_result": null
+  },
+  {
+    "id": "inbox-msg-2",
+    "source": "Zendesk P1",
+    "sender": "Kavita Raman (Director of Engineering, AlphaCloud)",
+    "channel": "Support API Webhook",
+    "subject": "[P1-INCIDENT] Database Connection Pool Exhaustion",
+    "body": "CRITICAL ALERT: Our integration service is receiving HTTP 500 across all endpoints. Your database connection pool appears exhausted after your 2:00 PM deployment. Our automated test suites are failing and production ingest is backed up by 50,000 events.",
+    "timestamp": "2026-09-13 18:25:06",
+    "status": "pending",
+    "triage_result": null
+  },
+  {
+    "id": "inbox-msg-3",
+    "source": "Website Form",
+    "sender": "Brian Kelly (VP Technology, Vanguard Retail)",
+    "channel": "Inbound Contact Form",
+    "subject": "Enterprise Evaluation & Custom Architecture Review",
+    "body": "Hi, We are looking to replace our legacy customer triage system with an LLM-powered solution. We handle roughly 8,000 customer inquiries per day. Could we set up a discovery call with your solutions engineering team this Thursday or Friday?",
+    "timestamp": "2026-09-13 18:25:06",
+    "status": "pending",
+    "triage_result": null
+  }
+]

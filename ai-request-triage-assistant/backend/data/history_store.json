@@ -1,0 +1,20 @@
+{
+  "usr-admin-01": [
+    {
+      "id": "hist-75ffc0",
+      "user_id": "usr-admin-01",
+      "text": "Test text",
+      "result": {
+        "summary": "Test summary",
+        "category": "Technical",
+        "priority": "Urgent",
+        "priority_reason": "Test reason",
+        "assigned_owner": "Engineering",
+        "draft_response": "Hello test",
+        "processing_time_ms": null
+      },
+      "timestamp": "2026-09-13 18:40:42"
+    }
+  ],
+  "usr-test-history-user": []
+}

@@ -87,7 +87,14 @@ export default function InboxFeedModal({
         </IconButton>
       </DialogTitle>
 
-      <DialogContent dividers sx={{ backgroundColor: '#f8fafc', py: 2.5 }}>
+      <DialogContent
+        dividers
+        sx={{
+          backgroundColor: (theme) =>
+            theme.palette.mode === 'dark' ? 'background.default' : '#f8fafc',
+          py: 2.5,
+        }}
+      >
         {/* Top Control Bar */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 1 }}>
           <Typography variant="body2" color="text.secondary">
@@ -140,7 +147,17 @@ export default function InboxFeedModal({
         </Box>
 
         {/* Integration Instructions */}
-        <Accordion sx={{ mb: 2.5, borderRadius: 1.5, border: '1px solid #e2e8f0', boxShadow: 'none' }}>
+        <Accordion
+          sx={{
+            mb: 2.5,
+            borderRadius: '8px !important',
+            border: '1px solid',
+            borderColor: 'divider',
+            backgroundColor: 'background.paper',
+            boxShadow: 'none',
+            '&:before': { display: 'none' },
+          }}
+        >
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <CodeIcon fontSize="small" color="action" />
@@ -157,9 +174,12 @@ export default function InboxFeedModal({
               component="pre"
               sx={{
                 p: 1.5,
-                backgroundColor: '#1e293b',
+                backgroundColor: (theme) =>
+                  theme.palette.mode === 'dark' ? '#090d16' : '#1e293b',
                 color: '#f1f5f9',
                 borderRadius: 1,
+                border: '1px solid',
+                borderColor: 'divider',
                 fontSize: '0.78rem',
                 overflowX: 'auto',
                 m: 0,
@@ -173,7 +193,7 @@ export default function InboxFeedModal({
         {/* Messages List */}
         {inboxMessages.length === 0 ? (
           <Box sx={{ textAlign: 'center', py: 6, color: 'text.secondary' }}>
-            <MoveToInboxIcon sx={{ fontSize: 48, color: '#cbd5e1', mb: 1 }} />
+            <MoveToInboxIcon sx={{ fontSize: 48, color: 'text.secondary', opacity: 0.4, mb: 1 }} />
             <Typography variant="subtitle1" fontWeight="600">
               Inbound queue is empty
             </Typography>
@@ -195,11 +215,19 @@ export default function InboxFeedModal({
               <Card
                 key={msg.id}
                 sx={{
-                  border: '1px solid #e2e8f0',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                  backgroundColor: 'background.paper',
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  boxShadow: (theme) =>
+                    theme.palette.mode === 'dark'
+                      ? '0 2px 8px rgba(0,0,0,0.4)'
+                      : '0 1px 3px rgba(0,0,0,0.04)',
                   transition: 'transform 0.15s, box-shadow 0.15s',
                   '&:hover': {
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                    boxShadow: (theme) =>
+                      theme.palette.mode === 'dark'
+                        ? '0 6px 20px rgba(0,0,0,0.6)'
+                        : '0 4px 12px rgba(0,0,0,0.08)',
                   },
                 }}
               >
@@ -246,10 +274,12 @@ export default function InboxFeedModal({
                     variant="body2"
                     color="text.primary"
                     sx={{
-                      backgroundColor: '#f8fafc',
+                      backgroundColor: (theme) =>
+                        theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.04)' : '#f8fafc',
                       p: 1.5,
                       borderRadius: 1,
-                      border: '1px solid #f1f5f9',
+                      border: '1px solid',
+                      borderColor: 'divider',
                       fontSize: '0.85rem',
                       lineHeight: 1.5,
                       mb: 1.5,

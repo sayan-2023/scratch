@@ -20,6 +20,7 @@ import {
   MenuItem,
   CircularProgress,
   Divider,
+  useTheme,
 } from '@mui/material';
 import FlashOnIcon from '@mui/icons-material/FlashOn';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
@@ -39,6 +40,9 @@ export default function SamplePicker({
   hasApiKey = false,
   onOpenKeyModal,
 }) {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+
   // Modal states
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -94,13 +98,18 @@ export default function SamplePicker({
       sx={{
         mb: 3,
         borderRadius: 3,
-        border: '1px solid #e2e8f0',
-        backgroundColor: '#ffffff',
-        boxShadow: '0 4px 20px -2px rgba(15, 23, 42, 0.04)',
+        border: '1px solid',
+        borderColor: 'divider',
+        backgroundColor: 'background.paper',
+        boxShadow: isDark
+          ? '0 4px 20px -2px rgba(0, 0, 0, 0.5)'
+          : '0 4px 20px -2px rgba(15, 23, 42, 0.04)',
         overflow: 'hidden',
         transition: 'all 0.2s ease',
         '&:hover': {
-          boxShadow: '0 6px 24px -2px rgba(15, 23, 42, 0.08)',
+          boxShadow: isDark
+            ? '0 6px 24px -2px rgba(0, 0, 0, 0.6)'
+            : '0 6px 24px -2px rgba(15, 23, 42, 0.08)',
         },
       }}
     >
@@ -113,8 +122,8 @@ export default function SamplePicker({
                 width: 28,
                 height: 28,
                 borderRadius: 1.5,
-                backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                color: '#2563eb',
+                backgroundColor: isDark ? 'rgba(59, 130, 246, 0.15)' : 'rgba(37, 99, 235, 0.1)',
+                color: 'primary.main',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -122,13 +131,19 @@ export default function SamplePicker({
             >
               <FlashOnIcon fontSize="small" />
             </Box>
-            <Typography variant="subtitle1" fontWeight="800" sx={{ color: '#0f172a' }}>
+            <Typography variant="subtitle1" fontWeight="800" sx={{ color: 'text.primary' }}>
               Scenario Presets & Dynamic Mock Testing
             </Typography>
             <Chip
               size="small"
               label={`${samples.length} scenarios`}
-              sx={{ height: 20, fontSize: '0.7rem', backgroundColor: '#f1f5f9', color: '#64748b', fontWeight: 600 }}
+              sx={{
+                height: 20,
+                fontSize: '0.7rem',
+                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.06)' : '#f1f5f9',
+                color: 'text.secondary',
+                fontWeight: 600,
+              }}
             />
           </Box>
 
@@ -168,11 +183,11 @@ export default function SamplePicker({
                 textTransform: 'none',
                 fontWeight: 600,
                 borderRadius: 2,
-                borderColor: '#cbd5e1',
-                color: '#334155',
+                borderColor: 'divider',
+                color: 'text.secondary',
                 '&:hover': {
-                  backgroundColor: '#f8fafc',
-                  borderColor: '#94a3b8',
+                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : '#f8fafc',
+                  borderColor: isDark ? 'rgba(255, 255, 255, 0.25)' : '#94a3b8',
                 },
               }}
             >
@@ -181,7 +196,7 @@ export default function SamplePicker({
 
             {/* Reset Defaults Button */}
             <Tooltip title="Reset all scenarios back to the 5 baseline defaults">
-              <IconButton size="small" onClick={onResetSamples} sx={{ color: '#64748b', '&:hover': { color: '#0f172a' } }}>
+              <IconButton size="small" onClick={onResetSamples} sx={{ color: 'text.secondary', '&:hover': { color: 'text.primary' } }}>
                 <RestartAltIcon fontSize="small" />
               </IconButton>
             </Tooltip>
@@ -221,20 +236,20 @@ export default function SamplePicker({
                         borderRadius: 1,
                         backgroundColor:
                           sample.expected_priority === 'Urgent'
-                            ? '#fee2e2'
+                            ? (isDark ? 'rgba(239, 68, 68, 0.2)' : '#fee2e2')
                             : sample.expected_priority === 'High'
-                            ? '#fef3c7'
+                            ? (isDark ? 'rgba(245, 158, 11, 0.2)' : '#fef3c7')
                             : sample.expected_priority === 'Medium'
-                            ? '#e0f2fe'
-                            : '#dcfce7',
+                            ? (isDark ? 'rgba(14, 165, 233, 0.2)' : '#e0f2fe')
+                            : (isDark ? 'rgba(16, 185, 129, 0.2)' : '#dcfce7'),
                         color:
                           sample.expected_priority === 'Urgent'
-                            ? '#b91c1c'
+                            ? (isDark ? '#fca5a5' : '#b91c1c')
                             : sample.expected_priority === 'High'
-                            ? '#b45309'
+                            ? (isDark ? '#fde68a' : '#b45309')
                             : sample.expected_priority === 'Medium'
-                            ? '#0369a1'
-                            : '#15803d',
+                            ? (isDark ? '#7dd3fc' : '#0369a1')
+                            : (isDark ? '#86efac' : '#15803d'),
                       }}
                     >
                       {sample.expected_priority}
@@ -248,13 +263,19 @@ export default function SamplePicker({
                   fontSize: '0.84rem',
                   borderRadius: 2,
                   transition: 'all 0.15s ease',
-                  borderColor: isSelected ? '#7c3aed' : sample.is_custom ? '#c4b5fd' : '#e2e8f0',
-                  backgroundColor: isSelected ? 'rgba(124, 58, 237, 0.08)' : sample.is_custom ? '#faf5ff' : '#ffffff',
-                  color: isSelected ? '#6d28d9' : '#1e293b',
-                  boxShadow: isSelected ? '0 0 0 2px rgba(124, 58, 237, 0.2)' : 'none',
+                  borderColor: isSelected ? '#7c3aed' : sample.is_custom ? (isDark ? '#8b5cf6' : '#c4b5fd') : 'divider',
+                  backgroundColor: isSelected
+                    ? (isDark ? 'rgba(124, 58, 237, 0.25)' : 'rgba(124, 58, 237, 0.08)')
+                    : sample.is_custom
+                    ? (isDark ? 'rgba(139, 92, 246, 0.12)' : '#faf5ff')
+                    : (isDark ? '#0b0f19' : '#ffffff'),
+                  color: isSelected ? (isDark ? '#c084fc' : '#6d28d9') : 'text.primary',
+                  boxShadow: isSelected ? (isDark ? '0 0 0 2px rgba(139, 92, 246, 0.4)' : '0 0 0 2px rgba(124, 58, 237, 0.2)') : 'none',
                   '&:hover': {
-                    backgroundColor: isSelected ? 'rgba(124, 58, 237, 0.12)' : '#f8fafc',
-                    borderColor: isSelected ? '#7c3aed' : '#94a3b8',
+                    backgroundColor: isSelected
+                      ? (isDark ? 'rgba(124, 58, 237, 0.35)' : 'rgba(124, 58, 237, 0.12)')
+                      : (isDark ? 'rgba(255, 255, 255, 0.05)' : '#f8fafc'),
+                    borderColor: isSelected ? '#7c3aed' : (isDark ? 'rgba(255, 255, 255, 0.3)' : '#94a3b8'),
                     transform: 'translateY(-1px)',
                   },
                 }}

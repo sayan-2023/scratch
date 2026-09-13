@@ -15,6 +15,7 @@ import {
   Grid,
   Stack,
   Tooltip,
+  useTheme,
 } from '@mui/material';
 import HistoryIcon from '@mui/icons-material/History';
 import SearchIcon from '@mui/icons-material/Search';
@@ -25,6 +26,8 @@ import LayersIcon from '@mui/icons-material/Layers';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 
 export default function HistorySidebar({ history = [], onSelectHistoryItem, activeIndex }) {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
   const [searchQuery, setSearchQuery] = useState('');
 
   const urgentCount = history.filter((h) => h.result?.priority === 'Urgent').length;
@@ -60,15 +63,18 @@ export default function HistorySidebar({ history = [], onSelectHistoryItem, acti
       sx={{
         height: '100%',
         borderRadius: 3,
-        border: '1px solid #e2e8f0',
-        backgroundColor: '#ffffff',
-        boxShadow: '0 4px 20px -2px rgba(15, 23, 42, 0.04)',
+        border: '1px solid',
+        borderColor: 'divider',
+        backgroundColor: 'background.paper',
+        boxShadow: isDark
+          ? '0 4px 20px -2px rgba(0, 0, 0, 0.5)'
+          : '0 4px 20px -2px rgba(15, 23, 42, 0.04)',
         display: 'flex',
         flexDirection: 'column',
       }}
     >
       {/* Header with Title & Stats */}
-      <Box sx={{ p: 2.2, borderBottom: '1px solid #f1f5f9', backgroundColor: '#fafafa' }}>
+      <Box sx={{ p: 2.2, borderBottom: '1px solid', borderColor: 'divider', backgroundColor: isDark ? 'rgba(255, 255, 255, 0.02)' : '#fafafa' }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Box
@@ -76,8 +82,8 @@ export default function HistorySidebar({ history = [], onSelectHistoryItem, acti
                 width: 28,
                 height: 28,
                 borderRadius: 1.5,
-                backgroundColor: 'rgba(124, 58, 237, 0.1)',
-                color: '#7c3aed',
+                backgroundColor: isDark ? 'rgba(168, 85, 247, 0.15)' : 'rgba(124, 58, 237, 0.1)',
+                color: 'secondary.main',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -85,14 +91,20 @@ export default function HistorySidebar({ history = [], onSelectHistoryItem, acti
             >
               <HistoryIcon fontSize="small" />
             </Box>
-            <Typography variant="subtitle1" fontWeight="800" sx={{ color: '#0f172a' }}>
+            <Typography variant="subtitle1" fontWeight="800" sx={{ color: 'text.primary' }}>
               Session History
             </Typography>
           </Box>
           <Chip
             size="small"
             label={`${history.length} Triaged`}
-            sx={{ height: 20, fontSize: '0.7rem', backgroundColor: '#f1f5f9', color: '#64748b', fontWeight: 700 }}
+            sx={{
+              height: 20,
+              fontSize: '0.7rem',
+              backgroundColor: isDark ? 'rgba(255, 255, 255, 0.06)' : '#f1f5f9',
+              color: 'text.secondary',
+              fontWeight: 700,
+            }}
           />
         </Box>
 
@@ -103,15 +115,16 @@ export default function HistorySidebar({ history = [], onSelectHistoryItem, acti
               sx={{
                 p: 1,
                 textAlign: 'center',
-                backgroundColor: '#ffffff',
-                border: '1px solid #e2e8f0',
+                backgroundColor: isDark ? '#0b0f19' : '#ffffff',
+                border: '1px solid',
+                borderColor: 'divider',
                 borderRadius: 2,
               }}
             >
-              <Typography variant="caption" sx={{ color: '#64748b', display: 'block', fontSize: '0.68rem', fontWeight: 600 }}>
+              <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', fontSize: '0.68rem', fontWeight: 600 }}>
                 P1 URGENT
               </Typography>
-              <Typography variant="subtitle2" fontWeight="800" sx={{ color: urgentCount > 0 ? '#dc2626' : '#0f172a' }}>
+              <Typography variant="subtitle2" fontWeight="800" sx={{ color: urgentCount > 0 ? (isDark ? '#f87171' : '#dc2626') : 'text.primary' }}>
                 {urgentCount}
               </Typography>
             </Box>
@@ -121,15 +134,16 @@ export default function HistorySidebar({ history = [], onSelectHistoryItem, acti
               sx={{
                 p: 1,
                 textAlign: 'center',
-                backgroundColor: '#ffffff',
-                border: '1px solid #e2e8f0',
+                backgroundColor: isDark ? '#0b0f19' : '#ffffff',
+                border: '1px solid',
+                borderColor: 'divider',
                 borderRadius: 2,
               }}
             >
-              <Typography variant="caption" sx={{ color: '#64748b', display: 'block', fontSize: '0.68rem', fontWeight: 600 }}>
+              <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', fontSize: '0.68rem', fontWeight: 600 }}>
                 HIGH RISK
               </Typography>
-              <Typography variant="subtitle2" fontWeight="800" sx={{ color: highCount > 0 ? '#d97706' : '#0f172a' }}>
+              <Typography variant="subtitle2" fontWeight="800" sx={{ color: highCount > 0 ? (isDark ? '#fbbf24' : '#d97706') : 'text.primary' }}>
                 {highCount}
               </Typography>
             </Box>
@@ -139,15 +153,16 @@ export default function HistorySidebar({ history = [], onSelectHistoryItem, acti
               sx={{
                 p: 1,
                 textAlign: 'center',
-                backgroundColor: '#ffffff',
-                border: '1px solid #e2e8f0',
+                backgroundColor: isDark ? '#0b0f19' : '#ffffff',
+                border: '1px solid',
+                borderColor: 'divider',
                 borderRadius: 2,
               }}
             >
-              <Typography variant="caption" sx={{ color: '#64748b', display: 'block', fontSize: '0.68rem', fontWeight: 600 }}>
+              <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', fontSize: '0.68rem', fontWeight: 600 }}>
                 ENG ROUTED
               </Typography>
-              <Typography variant="subtitle2" fontWeight="800" sx={{ color: '#2563eb' }}>
+              <Typography variant="subtitle2" fontWeight="800" sx={{ color: 'primary.main' }}>
                 {engineeringCount}
               </Typography>
             </Box>
@@ -165,16 +180,18 @@ export default function HistorySidebar({ history = [], onSelectHistoryItem, acti
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <SearchIcon fontSize="small" sx={{ color: '#94a3b8' }} />
+                  <SearchIcon fontSize="small" sx={{ color: 'text.secondary' }} />
                 </InputAdornment>
               ),
             }}
             sx={{
               mt: 1.5,
               '& .MuiOutlinedInput-root': {
-                backgroundColor: '#ffffff',
+                backgroundColor: isDark ? '#0b0f19' : '#ffffff',
                 borderRadius: 2,
                 fontSize: '0.78rem',
+                color: 'text.primary',
+                '& fieldset': { borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : '#cbd5e1' },
               },
             }}
           />
@@ -190,34 +207,35 @@ export default function HistorySidebar({ history = [], onSelectHistoryItem, acti
               height: 56,
               mx: 'auto',
               borderRadius: 3,
-              backgroundColor: '#f8fafc',
-              border: '1px solid #e2e8f0',
+              backgroundColor: isDark ? '#0b0f19' : '#f8fafc',
+              border: '1px solid',
+              borderColor: 'divider',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#94a3b8',
+              color: 'text.secondary',
               mb: 2,
             }}
           >
             <AutoAwesomeIcon sx={{ fontSize: 28, color: '#a855f7' }} />
           </Box>
-          <Typography variant="subtitle2" fontWeight="700" sx={{ color: '#1e293b', mb: 0.5 }}>
+          <Typography variant="subtitle2" fontWeight="700" sx={{ color: 'text.primary', mb: 0.5 }}>
             No Triage Sessions Yet
           </Typography>
-          <Typography variant="caption" sx={{ color: '#64748b', display: 'block', maxWidth: 220, mx: 'auto', lineHeight: 1.5, mb: 2 }}>
+          <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', maxWidth: 220, mx: 'auto', lineHeight: 1.5, mb: 2 }}>
             Select a scenario preset above or paste an email to trigger real-time AI triage.
           </Typography>
 
           <Stack spacing={1} sx={{ mt: 1 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center' }}>
               <SpeedIcon fontSize="small" sx={{ color: '#2563eb', fontSize: 16 }} />
-              <Typography variant="caption" sx={{ color: '#64748b' }}>
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                 Pipeline: Gemini 2.5 Flash
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center' }}>
               <SecurityIcon fontSize="small" sx={{ color: '#10b981', fontSize: 16 }} />
-              <Typography variant="caption" sx={{ color: '#64748b' }}>
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                 PII Anonymization: Active
               </Typography>
             </Box>
@@ -237,16 +255,20 @@ export default function HistorySidebar({ history = [], onSelectHistoryItem, acti
                       py: 1.5,
                       px: 2,
                       borderLeft: isSelected ? '4px solid #7c3aed' : '4px solid transparent',
-                      backgroundColor: isSelected ? 'rgba(124, 58, 237, 0.04)' : undefined,
+                      backgroundColor: isSelected
+                        ? (isDark ? 'rgba(124, 58, 237, 0.18)' : 'rgba(124, 58, 237, 0.05)')
+                        : undefined,
                       '&:hover': {
-                        backgroundColor: isSelected ? 'rgba(124, 58, 237, 0.08)' : '#f8fafc',
+                        backgroundColor: isSelected
+                          ? (isDark ? 'rgba(124, 58, 237, 0.25)' : 'rgba(124, 58, 237, 0.08)')
+                          : (isDark ? 'rgba(255, 255, 255, 0.04)' : '#f8fafc'),
                       },
                     }}
                   >
                     <ListItemText
                       primary={
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-                          <Typography variant="body2" fontWeight={isSelected ? 800 : 600} noWrap sx={{ maxWidth: '65%', color: '#0f172a' }}>
+                          <Typography variant="body2" fontWeight={isSelected ? 800 : 600} noWrap sx={{ maxWidth: '65%', color: 'text.primary' }}>
                             {item.result.category} • {item.result.assigned_owner}
                           </Typography>
                           <Chip
@@ -276,7 +298,7 @@ export default function HistorySidebar({ history = [], onSelectHistoryItem, acti
                     />
                   </ListItemButton>
                 </ListItem>
-                {index < filteredHistory.length - 1 && <Divider component="li" />}
+                {index < filteredHistory.length - 1 && <Divider component="li" sx={{ borderColor: 'divider' }} />}
               </React.Fragment>
             );
           })}

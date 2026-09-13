@@ -418,7 +418,7 @@ export default function AuthModal({
         </IconButton>
       </DialogTitle>
 
-      <DialogContent dividers sx={{ p: 3, backgroundColor: '#ffffff' }}>
+      <DialogContent dividers sx={{ p: 3, backgroundColor: 'background.paper' }}>
         {/* Alerts */}
         {errorMsg && (
           <Alert severity="error" sx={{ mb: 2 }} onClose={() => setErrorMsg('')}>
@@ -583,8 +583,8 @@ export default function AuthModal({
                     variant="outlined"
                     sx={{
                       p: 2,
-                      bgcolor: '#f8fafc',
-                      borderColor: '#e2e8f0',
+                      bgcolor: 'action.hover',
+                      borderColor: 'divider',
                       borderRadius: 2,
                       textAlign: 'center',
                     }}
@@ -631,13 +631,13 @@ export default function AuthModal({
               sx={{
                 py: 1,
                 mb: 2,
-                color: '#374151',
-                borderColor: '#cbd5e1',
+                color: 'text.primary',
+                borderColor: 'divider',
                 fontWeight: 600,
                 textTransform: 'none',
                 '&:hover': {
-                  borderColor: '#94a3b8',
-                  backgroundColor: '#f8fafc',
+                  borderColor: 'primary.main',
+                  backgroundColor: 'action.hover',
                 },
               }}
             >

@@ -104,7 +104,7 @@
     "name": "Executive Lead (Google)",
     "password_hash": "df763ff39b58db41bcfdb7d6dde448eb547def60dc00b7f29afd40fc25b2a289",
     "role": "User",
-    "avatar_url": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&h=120&q=80",
+    "avatar_url": "https://api.dicebear.com/7.x/initials/svg?seed=Executive%20Lead%20(Google)",
     "created_at": "2026-09-13 19:06:17"
   },
   {
@@ -113,7 +113,7 @@
     "name": "sayan_dutta",
     "password_hash": "8b430cee52fc25fa64609004e3292c349f604078c6b0224b298faa5745010c0c",
     "role": "User",
-    "avatar_url": "https://api.dicebear.com/7.x/initials/svg?seed=sayan_dutta",
+    "avatar_url": "https://api.dicebear.com/7.x/initials/svg?seed=Sayan%20Dutta",
     "created_at": "2026-09-13 19:07:24"
   },
   {
@@ -1447,5 +1447,77 @@
     "role": "User",
     "avatar_url": "https://api.dicebear.com/7.x/initials/svg?seed=Congrats User",
     "created_at": "2026-09-13 20:51:12"
+  },
+  {
+    "id": "usr-c4f227",
+    "email": "user_804ec7@cyberdyne.com",
+    "name": "Sarah Connor",
+    "password_hash": "32fe6d4b30f3649f7fc060c842392942a11d92a92323bdf9d4c7d64c374433f6",
+    "role": "User",
+    "avatar_url": "https://api.dicebear.com/7.x/initials/svg?seed=Sarah Connor",
+    "created_at": "2026-09-13 21:16:56"
+  },
+  {
+    "id": "usr-g-b2c316",
+    "email": "alex_804ec7@gmail.com",
+    "name": "Alex Mercer",
+    "password_hash": "eaac3a23f3494b560f9fc962573a2676b0bf1c0c3c8f207519540442953d9901",
+    "role": "User",
+    "avatar_url": "https://example.com/avatar.jpg",
+    "created_at": "2026-09-13 21:16:56"
+  },
+  {
+    "id": "usr-7e38de",
+    "email": "reset_user_e1c460@cyberdyne.com",
+    "name": "Reset Tester",
+    "password_hash": "cb3fa0c9ffc50ddb1c137e6459227c44694fa90eea0c4b83cf37daac968d7f3b",
+    "role": "User",
+    "avatar_url": "https://api.dicebear.com/7.x/initials/svg?seed=Reset Tester",
+    "created_at": "2026-09-13 21:16:56"
+  },
+  {
+    "id": "usr-974010",
+    "email": "newuser_b920b0@company.com",
+    "name": "Devin Tester",
+    "password_hash": "c1dd1d36e19c7a10f75c8844cfa1f676876b1895b0481bb5399d462bb21a07f8",
+    "role": "User",
+    "avatar_url": "https://api.dicebear.com/7.x/initials/svg?seed=Devin Tester",
+    "created_at": "2026-09-13 21:16:56"
+  },
+  {
+    "id": "usr-g-e5e799",
+    "email": "oauth_user_5c5936@gmail.com",
+    "name": "Jordan Lee",
+    "password_hash": "5c00a991d3e90a7c221065fed72e2c83de0b9f623bb48d2cf16f7f46d48b8e26",
+    "role": "User",
+    "avatar_url": "https://api.dicebear.com/7.x/initials/svg?seed=Jordan",
+    "created_at": "2026-09-13 21:16:56"
+  },
+  {
+    "id": "usr-g-5a76d9",
+    "email": "live_user_1a5971@gmail.com",
+    "name": "Live Recipient",
+    "password_hash": "80ea068b815c70a1b2ccedc8dc64a27ea4aa3ef4484157c5a34b702478c12928",
+    "role": "User",
+    "avatar_url": "https://api.dicebear.com/7.x/initials/svg?seed=Live Recipient",
+    "created_at": "2026-09-13 21:16:56"
+  },
+  {
+    "id": "usr-66b73b",
+    "email": "reset_live_43a735@example.com",
+    "name": "Live Reset User",
+    "password_hash": "99b84aa9d248622f424bd21225436472eb0ee9e41c41cf080bd27c29a678c7b6",
+    "role": "User",
+    "avatar_url": "https://api.dicebear.com/7.x/initials/svg?seed=Live Reset User",
+    "created_at": "2026-09-13 21:16:56"
+  },
+  {
+    "id": "usr-54ed17",
+    "email": "reset_congrats_8c2a09@example.com",
+    "name": "Congrats User",
+    "password_hash": "cb3fa0c9ffc50ddb1c137e6459227c44694fa90eea0c4b83cf37daac968d7f3b",
+    "role": "User",
+    "avatar_url": "https://api.dicebear.com/7.x/initials/svg?seed=Congrats User",
+    "created_at": "2026-09-13 21:16:56"
   }
 ]

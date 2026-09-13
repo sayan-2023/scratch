@@ -19,6 +19,7 @@ import {
   MenuItem,
   Paper,
   ButtonGroup,
+  useTheme,
 } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckIcon from '@mui/icons-material/Check';
@@ -44,6 +45,9 @@ export default function TriageResultCard({
   simulationMode = false,
   onOpenEmailModal,
 }) {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+
   const [copied, setCopied] = useState(false);
   const [draftText, setDraftText] = useState(result.draft_response || '');
   const [recipientEmails, setRecipientEmails] = useState('client@example.com');
@@ -192,41 +196,41 @@ export default function TriageResultCard({
     switch (priority) {
       case 'Urgent':
         return {
-          color: '#b91c1c',
-          bgColor: '#fee2e2',
-          borderColor: '#fca5a5',
-          auraColor: 'rgba(239, 68, 68, 0.12)',
+          color: isDark ? '#fca5a5' : '#b91c1c',
+          bgColor: isDark ? 'rgba(239, 68, 68, 0.2)' : '#fee2e2',
+          borderColor: isDark ? '#ef4444' : '#fca5a5',
+          auraColor: isDark ? 'rgba(239, 68, 68, 0.25)' : 'rgba(239, 68, 68, 0.12)',
           icon: <ErrorOutlineIcon fontSize="small" />,
         };
       case 'High':
         return {
-          color: '#b45309',
-          bgColor: '#fef3c7',
-          borderColor: '#fcd34d',
-          auraColor: 'rgba(245, 158, 11, 0.12)',
+          color: isDark ? '#fde68a' : '#b45309',
+          bgColor: isDark ? 'rgba(245, 158, 11, 0.2)' : '#fef3c7',
+          borderColor: isDark ? '#f59e0b' : '#fcd34d',
+          auraColor: isDark ? 'rgba(245, 158, 11, 0.25)' : 'rgba(245, 158, 11, 0.12)',
           icon: <WarningAmberIcon fontSize="small" />,
         };
       case 'Medium':
         return {
-          color: '#0369a1',
-          bgColor: '#e0f2fe',
-          borderColor: '#7dd3fc',
-          auraColor: 'rgba(14, 165, 233, 0.12)',
+          color: isDark ? '#7dd3fc' : '#0369a1',
+          bgColor: isDark ? 'rgba(14, 165, 233, 0.2)' : '#e0f2fe',
+          borderColor: isDark ? '#0ea5e9' : '#7dd3fc',
+          auraColor: isDark ? 'rgba(14, 165, 233, 0.25)' : 'rgba(14, 165, 233, 0.12)',
           icon: <InfoOutlinedIcon fontSize="small" />,
         };
       case 'Low':
         return {
-          color: '#15803d',
-          bgColor: '#dcfce7',
-          borderColor: '#86efac',
-          auraColor: 'rgba(16, 185, 129, 0.12)',
+          color: isDark ? '#86efac' : '#15803d',
+          bgColor: isDark ? 'rgba(16, 185, 129, 0.2)' : '#dcfce7',
+          borderColor: isDark ? '#10b981' : '#86efac',
+          auraColor: isDark ? 'rgba(16, 185, 129, 0.25)' : 'rgba(16, 185, 129, 0.12)',
           icon: <CheckCircleOutlineIcon fontSize="small" />,
         };
       default:
         return {
-          color: '#475569',
-          bgColor: '#f8fafc',
-          borderColor: '#cbd5e1',
+          color: isDark ? '#94a3b8' : '#475569',
+          bgColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f8fafc',
+          borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : '#cbd5e1',
           auraColor: 'transparent',
           icon: <InfoOutlinedIcon fontSize="small" />,
         };
@@ -254,8 +258,10 @@ export default function TriageResultCard({
     <Card
       sx={{
         borderRadius: 3,
-        border: '1px solid #e2e8f0',
-        boxShadow: `0 8px 32px -4px ${priorityStyle.auraColor}, 0 4px 16px rgba(0,0,0,0.04)`,
+        border: '1px solid',
+        borderColor: 'divider',
+        backgroundColor: 'background.paper',
+        boxShadow: `0 8px 32px -4px ${priorityStyle.auraColor}, 0 4px 16px ${isDark ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.04)'}`,
         overflow: 'hidden',
         transition: 'all 0.3s ease',
       }}
@@ -263,8 +269,9 @@ export default function TriageResultCard({
       {/* Header Bar */}
       <Box
         sx={{
-          backgroundColor: '#ffffff',
-          borderBottom: '1px solid #f1f5f9',
+          backgroundColor: isDark ? 'rgba(255, 255, 255, 0.02)' : '#ffffff',
+          borderBottom: '1px solid',
+          borderColor: 'divider',
           px: 3,
           py: 2,
           display: 'flex',
@@ -288,7 +295,7 @@ export default function TriageResultCard({
               fontSize: '0.85rem',
             }}
           />
-          <Typography variant="body2" fontWeight="700" sx={{ color: '#0f172a' }}>
+          <Typography variant="body2" fontWeight="700" sx={{ color: 'text.primary' }}>
             AI Triage Completed
           </Typography>
         </Box>
@@ -302,8 +309,18 @@ export default function TriageResultCard({
                 height: 22,
                 fontSize: '0.72rem',
                 fontWeight: 700,
-                backgroundColor: result.churn_risk === 'Critical' ? '#fee2e2' : result.churn_risk === 'High' ? '#fef3c7' : '#f1f5f9',
-                color: result.churn_risk === 'Critical' ? '#b91c1c' : result.churn_risk === 'High' ? '#b45309' : '#475569',
+                backgroundColor:
+                  result.churn_risk === 'Critical'
+                    ? (isDark ? 'rgba(239, 68, 68, 0.2)' : '#fee2e2')
+                    : result.churn_risk === 'High'
+                    ? (isDark ? 'rgba(245, 158, 11, 0.2)' : '#fef3c7')
+                    : (isDark ? 'rgba(255, 255, 255, 0.06)' : '#f1f5f9'),
+                color:
+                  result.churn_risk === 'Critical'
+                    ? (isDark ? '#fca5a5' : '#b91c1c')
+                    : result.churn_risk === 'High'
+                    ? (isDark ? '#fde68a' : '#b45309')
+                    : 'text.secondary',
               }}
             />
           )}
@@ -314,7 +331,13 @@ export default function TriageResultCard({
               icon={<TimerOutlinedIcon fontSize="small" />}
               label={`${(result.processing_time_ms / 1000).toFixed(2)}s`}
               variant="outlined"
-              sx={{ backgroundColor: '#ffffff', fontSize: '0.75rem', fontWeight: 600 }}
+              sx={{
+                backgroundColor: isDark ? '#0b0f19' : '#ffffff',
+                borderColor: 'divider',
+                color: 'text.secondary',
+                fontSize: '0.75rem',
+                fontWeight: 600,
+              }}
             />
           )}
         </Stack>
@@ -329,8 +352,9 @@ export default function TriageResultCard({
               sx={{
                 p: 2,
                 borderRadius: 2.5,
-                backgroundColor: '#f8fafc',
-                border: '1px solid #e2e8f0',
+                backgroundColor: isDark ? '#0b0f19' : '#f8fafc',
+                border: '1px solid',
+                borderColor: 'divider',
                 height: '100%',
               }}
             >
@@ -353,8 +377,9 @@ export default function TriageResultCard({
               sx={{
                 p: 2,
                 borderRadius: 2.5,
-                backgroundColor: '#f8fafc',
-                border: '1px solid #e2e8f0',
+                backgroundColor: isDark ? '#0b0f19' : '#f8fafc',
+                border: '1px solid',
+                borderColor: 'divider',
                 height: '100%',
               }}
             >
@@ -379,8 +404,9 @@ export default function TriageResultCard({
               sx={{
                 p: 2,
                 borderRadius: 2.5,
-                backgroundColor: '#f8fafc',
-                border: '1px solid #e2e8f0',
+                backgroundColor: isDark ? '#0b0f19' : '#f8fafc',
+                border: '1px solid',
+                borderColor: 'divider',
                 height: '100%',
               }}
             >
@@ -400,14 +426,14 @@ export default function TriageResultCard({
             mb: 2.5,
             p: 2,
             borderRadius: 2.5,
-            backgroundColor: '#eff6ff',
-            border: '1px solid #bfdbfe',
+            backgroundColor: isDark ? 'rgba(37, 99, 235, 0.15)' : '#eff6ff',
+            border: isDark ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid #bfdbfe',
           }}
         >
-          <Typography variant="caption" color="primary.dark" fontWeight="800" textTransform="uppercase">
+          <Typography variant="caption" sx={{ color: isDark ? '#60a5fa' : 'primary.dark' }} fontWeight="800" textTransform="uppercase">
             Executive Summary
           </Typography>
-          <Typography variant="body1" color="#1e3a8a" sx={{ mt: 0.5, fontWeight: 500, lineHeight: 1.5 }}>
+          <Typography variant="body1" sx={{ color: isDark ? '#dbeafe' : '#1e3a8a', mt: 0.5, fontWeight: 500, lineHeight: 1.5 }}>
             {result.summary}
           </Typography>
         </Box>
@@ -419,8 +445,8 @@ export default function TriageResultCard({
               mb: 3,
               p: 2,
               borderRadius: 2.5,
-              backgroundColor: '#faf5ff',
-              border: '1px solid #e9d5ff',
+              backgroundColor: isDark ? 'rgba(124, 58, 237, 0.12)' : '#faf5ff',
+              border: isDark ? '1px solid rgba(168, 85, 247, 0.25)' : '1px solid #e9d5ff',
               display: 'flex',
               flexWrap: 'wrap',
               gap: 1.5,
@@ -438,11 +464,24 @@ export default function TriageResultCard({
                     key={i}
                     size="small"
                     label={entity}
-                    sx={{ backgroundColor: '#ffffff', border: '1px solid #d8b4fe', color: '#6b21a8', fontWeight: 600, fontSize: '0.75rem' }}
+                    sx={{
+                      backgroundColor: isDark ? '#0b0f19' : '#ffffff',
+                      border: isDark ? '1px solid #7c3aed' : '1px solid #d8b4fe',
+                      color: isDark ? '#c084fc' : '#6b21a8',
+                      fontWeight: 600,
+                      fontSize: '0.75rem',
+                    }}
                   />
                 ))
               ) : (
-                <Chip size="small" label="Standard Inquiry" sx={{ backgroundColor: '#ffffff', color: '#6b21a8' }} />
+                <Chip
+                  size="small"
+                  label="Standard Inquiry"
+                  sx={{
+                    backgroundColor: isDark ? '#0b0f19' : '#ffffff',
+                    color: isDark ? '#c084fc' : '#6b21a8',
+                  }}
+                />
               )}
             </Box>
 
@@ -454,7 +493,12 @@ export default function TriageResultCard({
                 <Chip
                   size="small"
                   label={result.sentiment_label}
-                  sx={{ backgroundColor: '#f3e8ff', color: '#6b21a8', fontWeight: 700, fontSize: '0.75rem' }}
+                  sx={{
+                    backgroundColor: isDark ? '#0b0f19' : '#f3e8ff',
+                    color: isDark ? '#c084fc' : '#6b21a8',
+                    fontWeight: 700,
+                    fontSize: '0.75rem',
+                  }}
                 />
               </Box>
             )}
@@ -463,7 +507,16 @@ export default function TriageResultCard({
 
         {/* Suggested Clarifying Diagnostic Questions */}
         {result.suggested_questions && result.suggested_questions.length > 0 && (
-          <Box sx={{ mb: 3, p: 2, borderRadius: 2.5, backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}>
+          <Box
+            sx={{
+              mb: 3,
+              p: 2,
+              borderRadius: 2.5,
+              backgroundColor: isDark ? '#0b0f19' : '#f8fafc',
+              border: '1px solid',
+              borderColor: 'divider',
+            }}
+          >
             <Typography variant="caption" sx={{ color: '#2563eb', fontWeight: 800, textTransform: 'uppercase', display: 'block', mb: 1.2 }}>
               ✦ AI Suggested Diagnostic Questions (Click to append into email draft):
             </Typography>
@@ -480,13 +533,13 @@ export default function TriageResultCard({
                     textTransform: 'none',
                     fontSize: '0.8rem',
                     textAlign: 'left',
-                    borderColor: '#cbd5e1',
-                    color: '#1e293b',
-                    backgroundColor: '#ffffff',
+                    borderColor: 'divider',
+                    color: 'text.primary',
+                    backgroundColor: isDark ? '#111827' : '#ffffff',
                     '&:hover': {
-                      backgroundColor: '#eff6ff',
-                      borderColor: '#2563eb',
-                      color: '#1d4ed8',
+                      backgroundColor: isDark ? 'rgba(37, 99, 235, 0.15)' : '#eff6ff',
+                      borderColor: 'primary.main',
+                      color: isDark ? '#60a5fa' : '#1d4ed8',
                     },
                   }}
                 >
@@ -497,13 +550,13 @@ export default function TriageResultCard({
           </Box>
         )}
 
-        <Divider sx={{ my: 3 }} />
+        <Divider sx={{ my: 3, borderColor: 'divider' }} />
 
         {/* Draft Response & Email Dispatch Section */}
         <Box>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 1.5 }}>
             <Box>
-              <Typography variant="h6" fontWeight="800" sx={{ color: '#0f172a' }}>
+              <Typography variant="h6" fontWeight="800" sx={{ color: 'text.primary' }}>
                 Approve & Transmit Client Email
               </Typography>
               <Typography variant="caption" color="text.secondary">
@@ -531,10 +584,10 @@ export default function TriageResultCard({
                         fontSize: '0.78rem',
                         fontWeight: isActive ? 700 : 500,
                         backgroundColor: isActive ? '#7c3aed' : undefined,
-                        borderColor: '#cbd5e1',
-                        color: isActive ? '#ffffff' : '#475569',
+                        borderColor: 'divider',
+                        color: isActive ? '#ffffff' : 'text.secondary',
                         '&:hover': {
-                          backgroundColor: isActive ? '#6d28d9' : '#f8fafc',
+                          backgroundColor: isActive ? '#6d28d9' : (isDark ? 'rgba(255, 255, 255, 0.05)' : '#f8fafc'),
                         },
                       }}
                     >
@@ -551,7 +604,7 @@ export default function TriageResultCard({
                   color={copied ? 'success' : 'inherit'}
                   startIcon={copied ? <CheckIcon /> : <ContentCopyIcon />}
                   onClick={handleCopy}
-                  sx={{ borderRadius: 2, textTransform: 'none', borderColor: '#cbd5e1' }}
+                  sx={{ borderRadius: 2, textTransform: 'none', borderColor: 'divider', color: 'text.secondary' }}
                 >
                   {copied ? 'Copied' : 'Copy'}
                 </Button>
@@ -565,8 +618,9 @@ export default function TriageResultCard({
             sx={{
               p: 2,
               mb: 2,
-              backgroundColor: '#f8fafc',
-              border: '1px solid #e2e8f0',
+              backgroundColor: isDark ? '#0b0f19' : '#f8fafc',
+              border: '1px solid',
+              borderColor: 'divider',
               borderRadius: 2.5,
             }}
           >
@@ -616,7 +670,7 @@ export default function TriageResultCard({
                         color="inherit"
                         size="small"
                         onClick={onOpenEmailModal}
-                        sx={{ minWidth: 40, px: 1, borderRadius: 2, borderColor: '#cbd5e1' }}
+                        sx={{ minWidth: 40, px: 1, borderRadius: 2, borderColor: 'divider' }}
                       >
                         <SettingsOutlinedIcon fontSize="small" />
                       </Button>
@@ -656,7 +710,8 @@ export default function TriageResultCard({
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  backgroundColor: 'rgba(255,255,255,0.7)',
+                  backgroundColor: isDark ? 'rgba(11, 15, 25, 0.85)' : 'rgba(255, 255, 255, 0.75)',
+                  backdropFilter: 'blur(4px)',
                   zIndex: 2,
                   display: 'flex',
                   alignItems: 'center',
@@ -681,11 +736,15 @@ export default function TriageResultCard({
               disabled={sentSuccess}
               placeholder="Review or write the response to be emailed..."
               sx={{
-                backgroundColor: '#ffffff',
+                backgroundColor: isDark ? '#0b0f19' : '#ffffff',
                 '& .MuiOutlinedInput-root': {
                   borderRadius: 2.5,
                   fontSize: '0.92rem',
                   lineHeight: 1.6,
+                  color: 'text.primary',
+                  '& fieldset': { borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : '#cbd5e1' },
+                  '&:hover fieldset': { borderColor: isDark ? 'rgba(255, 255, 255, 0.25)' : '#94a3b8' },
+                  '&.Mui-focused fieldset': { borderColor: '#7c3aed', borderWidth: 2 },
                 },
               }}
             />

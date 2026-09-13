@@ -41,6 +41,9 @@ import PsychologyIcon from '@mui/icons-material/Psychology';
 import DoneIcon from '@mui/icons-material/Done';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 
+import ThemeToggle from './ThemeToggle';
+import { useColorMode } from '../ThemeContext';
+
 const STUDIO_PRESETS = [
   {
     id: 'outage',
@@ -148,6 +151,7 @@ export default function LandingPage({
   currentUser,
   onLogout,
 }) {
+  const { isDark } = useColorMode();
   const [activeDemoTab, setActiveDemoTab] = useState('technical');
   const [aiStudioOpen, setAiStudioOpen] = useState(false);
   const [selectedPreset, setSelectedPreset] = useState('outage');
@@ -250,15 +254,23 @@ export default function LandingPage({
   const currentDemo = demoScenarios[activeDemoTab];
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: '#0f172a', color: '#f8fafc' }}>
+    <Box
+      sx={{
+        minHeight: '100vh',
+        backgroundColor: isDark ? '#0b0f19' : '#f8fafc',
+        color: isDark ? '#f8fafc' : '#0f172a',
+        transition: 'background-color 0.3s ease, color 0.3s ease',
+      }}
+    >
       {/* Top Navigation */}
       <AppBar
         position="sticky"
         elevation={0}
         sx={{
-          backgroundColor: 'rgba(15, 23, 42, 0.85)',
+          backgroundColor: isDark ? 'rgba(11, 15, 25, 0.85)' : 'rgba(255, 255, 255, 0.85)',
           backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+          borderBottom: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(0, 0, 0, 0.08)',
+          transition: 'background-color 0.3s ease, border-color 0.3s ease',
         }}
       >
         <Container maxWidth="xl">
@@ -272,28 +284,42 @@ export default function LandingPage({
                   borderRadius: 2,
                   display: 'flex',
                   alignItems: 'center',
+                  boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)',
                 }}
               >
                 <SmartToyIcon />
               </Box>
               <Box>
-                <Typography variant="h6" fontWeight="bold" sx={{ color: '#ffffff', letterSpacing: '-0.02em' }}>
+                <Typography
+                  variant="h6"
+                  fontWeight="bold"
+                  sx={{
+                    color: isDark ? '#ffffff' : '#0f172a',
+                    letterSpacing: '-0.02em',
+                  }}
+                >
                   AI Request Triage Assistant
                 </Typography>
-                <Typography variant="caption" sx={{ color: '#94a3b8' }}>
+                <Typography variant="caption" sx={{ color: isDark ? '#94a3b8' : '#64748b' }}>
                   Powered by LangGraph & Google Gemini
                 </Typography>
               </Box>
             </Box>
 
             <Stack direction="row" spacing={1.5} alignItems="center">
+              {/* Theme Mode Toggle (Outside Landing Page) */}
+              <ThemeToggle size="small" />
+
               {currentUser ? (
                 <Stack direction="row" spacing={1.5} alignItems="center">
                   <Chip
                     avatar={<Avatar src={currentUser.avatar_url}>{currentUser.name[0]}</Avatar>}
                     label={currentUser.name}
                     variant="outlined"
-                    sx={{ color: '#f8fafc', borderColor: '#475569' }}
+                    sx={{
+                      color: isDark ? '#f8fafc' : '#0f172a',
+                      borderColor: isDark ? '#475569' : '#cbd5e1',
+                    }}
                   />
                   <Button
                     variant="contained"
@@ -313,7 +339,10 @@ export default function LandingPage({
                     color="inherit"
                     size="small"
                     onClick={onLogout}
-                    sx={{ borderColor: '#475569', color: '#cbd5e1' }}
+                    sx={{
+                      borderColor: isDark ? '#475569' : '#cbd5e1',
+                      color: isDark ? '#cbd5e1' : '#64748b',
+                    }}
                   >
                     Logout
                   </Button>
@@ -325,11 +354,15 @@ export default function LandingPage({
                     color="inherit"
                     onClick={onOpenAuthModal}
                     sx={{
-                      borderColor: '#475569',
-                      color: '#f8fafc',
+                      borderColor: isDark ? '#475569' : '#cbd5e1',
+                      color: isDark ? '#f8fafc' : '#334155',
                       borderRadius: 2,
                       textTransform: 'none',
                       fontWeight: 600,
+                      '&:hover': {
+                        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.04)',
+                        borderColor: isDark ? '#94a3b8' : '#94a3b8',
+                      },
                     }}
                   >
                     Sign In
@@ -345,6 +378,7 @@ export default function LandingPage({
                       borderRadius: 2,
                       textTransform: 'none',
                       px: 2.5,
+                      boxShadow: '0 4px 14px rgba(37, 99, 235, 0.35)',
                     }}
                   >
                     Launch App
@@ -361,19 +395,21 @@ export default function LandingPage({
         sx={{
           pt: { xs: 8, md: 12 },
           pb: { xs: 8, md: 12 },
-          background: 'radial-gradient(circle at 50% 10%, rgba(59, 130, 246, 0.15), transparent 60%)',
+          background: isDark
+            ? 'radial-gradient(circle at 50% 10%, rgba(59, 130, 246, 0.18), transparent 60%)'
+            : 'radial-gradient(circle at 50% 10%, rgba(99, 102, 241, 0.1), rgba(248, 250, 252, 0.9) 60%)',
           textAlign: 'center',
           position: 'relative',
         }}
       >
         <Container maxWidth="lg">
           <Chip
-            icon={<AutoAwesomeIcon sx={{ color: '#a855f7 !important' }} />}
+            icon={<AutoAwesomeIcon sx={{ color: isDark ? '#c084fc !important' : '#7c3aed !important' }} />}
             label="AI-POWERED CLIENT INQUIRY ORCHESTRATION 2.0"
             sx={{
-              backgroundColor: 'rgba(168, 85, 247, 0.12)',
-              color: '#c084fc',
-              borderColor: 'rgba(168, 85, 247, 0.3)',
+              backgroundColor: isDark ? 'rgba(168, 85, 247, 0.12)' : 'rgba(124, 58, 237, 0.08)',
+              color: isDark ? '#c084fc' : '#7c3aed',
+              borderColor: isDark ? 'rgba(168, 85, 247, 0.3)' : 'rgba(124, 58, 237, 0.25)',
               fontWeight: 700,
               fontSize: '0.8rem',
               py: 2,
@@ -390,6 +426,7 @@ export default function LandingPage({
               letterSpacing: '-0.03em',
               lineHeight: 1.15,
               fontSize: { xs: '2.5rem', md: '4rem' },
+              color: isDark ? '#ffffff' : '#0f172a',
               mb: 3,
             }}
           >
@@ -397,7 +434,9 @@ export default function LandingPage({
             <Box
               component="span"
               sx={{
-                background: 'linear-gradient(135deg, #60a5fa 0%, #c084fc 100%)',
+                background: isDark
+                  ? 'linear-gradient(135deg, #60a5fa 0%, #c084fc 100%)'
+                  : 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
               }}
@@ -409,7 +448,7 @@ export default function LandingPage({
           <Typography
             variant="h6"
             sx={{
-              color: '#94a3b8',
+              color: isDark ? '#94a3b8' : '#475569',
               maxWidth: 800,
               mx: 'auto',
               mb: 5,
@@ -435,7 +474,9 @@ export default function LandingPage({
                 fontWeight: 800,
                 borderRadius: 2.5,
                 background: 'linear-gradient(135deg, #ec4899 0%, #8b5cf6 50%, #3b82f6 100%)',
-                boxShadow: '0 8px 32px rgba(139, 92, 246, 0.45)',
+                boxShadow: isDark
+                  ? '0 8px 32px rgba(139, 92, 246, 0.45)'
+                  : '0 8px 24px rgba(139, 92, 246, 0.3)',
                 textTransform: 'none',
                 border: '1px solid rgba(255, 255, 255, 0.25)',
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -460,12 +501,14 @@ export default function LandingPage({
                 fontSize: '1.05rem',
                 fontWeight: 600,
                 borderRadius: 2.5,
-                borderColor: '#475569',
-                color: '#f8fafc',
+                borderColor: isDark ? '#475569' : '#cbd5e1',
+                color: isDark ? '#f8fafc' : '#0f172a',
+                backgroundColor: isDark ? 'transparent' : '#ffffff',
                 textTransform: 'none',
+                boxShadow: isDark ? 'none' : '0 2px 8px rgba(0, 0, 0, 0.04)',
                 '&:hover': {
-                  borderColor: '#94a3b8',
-                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                  borderColor: isDark ? '#94a3b8' : '#94a3b8',
+                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f8fafc',
                 },
               }}
             >
@@ -477,9 +520,12 @@ export default function LandingPage({
           <Paper
             elevation={0}
             sx={{
-              backgroundColor: 'rgba(30, 41, 59, 0.6)',
+              backgroundColor: isDark ? 'rgba(30, 41, 59, 0.6)' : '#ffffff',
               backdropFilter: 'blur(16px)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
+              border: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #e2e8f0',
+              boxShadow: isDark
+                ? '0 10px 30px rgba(0, 0, 0, 0.3)'
+                : '0 10px 30px -10px rgba(0, 0, 0, 0.06)',
               borderRadius: 4,
               p: 3,
               mb: 8,
@@ -487,26 +533,26 @@ export default function LandingPage({
           >
             <Grid container spacing={3} alignItems="center">
               <Grid item xs={6} md={3}>
-                <Typography variant="h4" fontWeight="800" sx={{ color: '#60a5fa' }}>
+                <Typography variant="h4" fontWeight="800" sx={{ color: '#3b82f6' }}>
                   99.4%
                 </Typography>
-                <Typography variant="caption" sx={{ color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <Typography variant="caption" sx={{ color: isDark ? '#94a3b8' : '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   Routing Accuracy
                 </Typography>
               </Grid>
               <Grid item xs={6} md={3}>
-                <Typography variant="h4" fontWeight="800" sx={{ color: '#34d399' }}>
+                <Typography variant="h4" fontWeight="800" sx={{ color: '#10b981' }}>
                   &lt; 1.5s
                 </Typography>
-                <Typography variant="caption" sx={{ color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <Typography variant="caption" sx={{ color: isDark ? '#94a3b8' : '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   Average Triage Speed
                 </Typography>
               </Grid>
               <Grid item xs={6} md={3}>
-                <Typography variant="h4" fontWeight="800" sx={{ color: '#c084fc' }}>
+                <Typography variant="h4" fontWeight="800" sx={{ color: '#8b5cf6' }}>
                   4 Teams
                 </Typography>
-                <Typography variant="caption" sx={{ color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <Typography variant="caption" sx={{ color: isDark ? '#94a3b8' : '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   Eng, Sales, Fin, CS
                 </Typography>
               </Grid>
@@ -514,7 +560,7 @@ export default function LandingPage({
                 <Typography variant="h4" fontWeight="800" sx={{ color: '#f59e0b' }}>
                   100%
                 </Typography>
-                <Typography variant="caption" sx={{ color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <Typography variant="caption" sx={{ color: isDark ? '#94a3b8' : '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   Zero Data-Loss Webhooks
                 </Typography>
               </Grid>
@@ -528,7 +574,11 @@ export default function LandingPage({
                 variant={activeDemoTab === 'technical' ? 'contained' : 'outlined'}
                 size="small"
                 onClick={() => setActiveDemoTab('technical')}
-                sx={{ borderRadius: 2, textTransform: 'none' }}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  borderColor: isDark ? '#334155' : '#cbd5e1',
+                }}
               >
                 🔴 Technical Outage
               </Button>
@@ -536,7 +586,11 @@ export default function LandingPage({
                 variant={activeDemoTab === 'billing' ? 'contained' : 'outlined'}
                 size="small"
                 onClick={() => setActiveDemoTab('billing')}
-                sx={{ borderRadius: 2, textTransform: 'none' }}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  borderColor: isDark ? '#334155' : '#cbd5e1',
+                }}
               >
                 🟠 Billing Dispute
               </Button>
@@ -544,7 +598,11 @@ export default function LandingPage({
                 variant={activeDemoTab === 'sales' ? 'contained' : 'outlined'}
                 size="small"
                 onClick={() => setActiveDemoTab('sales')}
-                sx={{ borderRadius: 2, textTransform: 'none' }}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  borderColor: isDark ? '#334155' : '#cbd5e1',
+                }}
               >
                 🔵 250-Seat Enterprise
               </Button>
@@ -554,42 +612,60 @@ export default function LandingPage({
               elevation={0}
               sx={{
                 textAlign: 'left',
-                backgroundColor: '#1e293b',
-                border: '1px solid #334155',
+                backgroundColor: isDark ? '#161f30' : '#ffffff',
+                border: isDark ? '1px solid #334155' : '1px solid #e2e8f0',
                 borderRadius: 4,
                 overflow: 'hidden',
-                boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
+                boxShadow: isDark ? '0 20px 40px rgba(0,0,0,0.5)' : '0 20px 40px -10px rgba(0,0,0,0.08)',
               }}
             >
               {/* Window Header */}
-              <Box sx={{ px: 3, py: 1.8, backgroundColor: '#0f172a', display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Box
+                sx={{
+                  px: 3,
+                  py: 1.8,
+                  backgroundColor: isDark ? '#0f172a' : '#f8fafc',
+                  borderBottom: isDark ? '1px solid #334155' : '1px solid #e2e8f0',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                }}
+              >
                 <Box sx={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#ef4444' }} />
                 <Box sx={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#f59e0b' }} />
                 <Box sx={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#10b981' }} />
-                <Typography variant="caption" sx={{ ml: 2, color: '#94a3b8', fontFamily: 'monospace' }}>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    ml: 2,
+                    color: isDark ? '#94a3b8' : '#64748b',
+                    fontFamily: 'monospace',
+                    fontWeight: 600,
+                  }}
+                >
                   AI Triage Pipeline • {currentDemo.title}
                 </Typography>
               </Box>
 
               <Grid container>
                 {/* Left: Incoming Request */}
-                <Grid item xs={12} md={6} sx={{ p: 3, borderRight: { md: '1px solid #334155' } }}>
-                  <Typography variant="caption" sx={{ color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <Grid item xs={12} md={6} sx={{ p: 3, borderRight: { md: isDark ? '1px solid #334155' : '1px solid #e2e8f0' } }}>
+                  <Typography variant="caption" sx={{ color: isDark ? '#94a3b8' : '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     Incoming Client Message
                   </Typography>
-                  <Typography variant="subtitle2" fontWeight="700" sx={{ color: '#f8fafc', mt: 0.5, mb: 1 }}>
+                  <Typography variant="subtitle2" fontWeight="700" sx={{ color: isDark ? '#f8fafc' : '#0f172a', mt: 0.5, mb: 1 }}>
                     {currentDemo.sender}
                   </Typography>
                   <Box
                     sx={{
                       p: 2,
-                      backgroundColor: 'rgba(15, 23, 42, 0.6)',
+                      backgroundColor: isDark ? 'rgba(15, 23, 42, 0.6)' : '#f8fafc',
                       borderRadius: 2,
-                      border: '1px solid rgba(255, 255, 255, 0.05)',
+                      border: isDark ? '1px solid rgba(255, 255, 255, 0.05)' : '1px solid #e2e8f0',
                       fontFamily: 'monospace',
                       fontSize: '0.82rem',
                       lineHeight: 1.6,
-                      color: '#cbd5e1',
+                      color: isDark ? '#cbd5e1' : '#334155',
                       minHeight: 140,
                     }}
                   >
@@ -598,8 +674,8 @@ export default function LandingPage({
                 </Grid>
 
                 {/* Right: AI Output */}
-                <Grid item xs={12} md={6} sx={{ p: 3, backgroundColor: 'rgba(30, 41, 59, 0.4)' }}>
-                  <Typography variant="caption" sx={{ color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <Grid item xs={12} md={6} sx={{ p: 3, backgroundColor: isDark ? 'rgba(30, 41, 59, 0.4)' : '#fafafa' }}>
+                  <Typography variant="caption" sx={{ color: isDark ? '#94a3b8' : '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     LangGraph State Extracted Output
                   </Typography>
 
@@ -613,7 +689,11 @@ export default function LandingPage({
                       size="small"
                       label={`Category: ${currentDemo.category}`}
                       variant="outlined"
-                      sx={{ color: '#e2e8f0', borderColor: '#475569' }}
+                      sx={{
+                        color: isDark ? '#e2e8f0' : '#334155',
+                        borderColor: isDark ? '#475569' : '#cbd5e1',
+                        backgroundColor: isDark ? 'transparent' : '#ffffff',
+                      }}
                     />
                     <Chip
                       size="small"
@@ -622,18 +702,18 @@ export default function LandingPage({
                     />
                   </Stack>
 
-                  <Typography variant="body2" sx={{ color: '#e2e8f0', mb: 1.5, fontSize: '0.85rem' }}>
+                  <Typography variant="body2" sx={{ color: isDark ? '#e2e8f0' : '#1e293b', mb: 1.5, fontSize: '0.85rem' }}>
                     <strong>Summary:</strong> {currentDemo.summary}
                   </Typography>
 
                   <Box
                     sx={{
                       p: 1.5,
-                      backgroundColor: 'rgba(15, 23, 42, 0.8)',
+                      backgroundColor: isDark ? 'rgba(15, 23, 42, 0.8)' : '#ffffff',
                       borderRadius: 2,
-                      border: '1px solid #334155',
+                      border: isDark ? '1px solid #334155' : '1px solid #e2e8f0',
                       fontSize: '0.8rem',
-                      color: '#93c5fd',
+                      color: isDark ? '#93c5fd' : '#1d4ed8',
                     }}
                   >
                     <strong>Auto-Drafted Response:</strong> "{currentDemo.draftSnippet}"
@@ -648,23 +728,46 @@ export default function LandingPage({
       {/* 4 FEATURE PILLARS */}
       <Container maxWidth="lg" sx={{ py: 10 }}>
         <Box sx={{ textAlign: 'center', mb: 8 }}>
-          <Typography variant="overline" sx={{ color: '#60a5fa', fontWeight: 700, letterSpacing: '0.1em' }}>
+          <Typography
+            variant="overline"
+            sx={{
+              color: isDark ? '#60a5fa' : '#2563eb',
+              fontWeight: 700,
+              letterSpacing: '0.1em',
+            }}
+          >
             ENTERPRISE CAPABILITIES
           </Typography>
-          <Typography variant="h3" fontWeight="800" sx={{ letterSpacing: '-0.02em', mt: 1 }}>
+          <Typography
+            variant="h3"
+            fontWeight="800"
+            sx={{
+              letterSpacing: '-0.02em',
+              mt: 1,
+              color: isDark ? '#f8fafc' : '#0f172a',
+            }}
+          >
             Engineered for Modern Operations
           </Typography>
         </Box>
 
         <Grid container spacing={3}>
           <Grid item xs={12} sm={6} md={3}>
-            <Card sx={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: 3, height: '100%' }}>
+            <Card
+              sx={{
+                backgroundColor: isDark ? '#111827' : '#ffffff',
+                border: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #e2e8f0',
+                borderRadius: 3,
+                height: '100%',
+                boxShadow: isDark ? 'none' : '0 4px 16px -2px rgba(15, 23, 42, 0.04)',
+              }}
+            >
               <CardContent sx={{ p: 3 }}>
-                <Box sx={{ color: '#60a5fa', mb: 2 }}><SpeedIcon fontSize="large" /></Box>
-                <Typography variant="h6" fontWeight="bold" sx={{ color: '#f8fafc', mb: 1 }}>
+                <Box sx={{ color: '#3b82f6', mb: 2 }}><SpeedIcon fontSize="large" /></Box>
+                <Typography variant="h6" fontWeight="bold" sx={{ color: isDark ? '#f8fafc' : '#0f172a', mb: 1 }}>
                   Instant Summarization
                 </Typography>
-                <Typography variant="body2" sx={{ color: '#94a3b8', lineHeight: 1.6 }}>
+                <Typography variant="body2" sx={{ color: isDark ? '#94a3b8' : '#64748b', lineHeight: 1.6 }}>
                   Extracts core business implications into a concise 1-2 sentence briefing, removing customer noise and emotional panic.
                 </Typography>
               </CardContent>
@@ -672,13 +775,21 @@ export default function LandingPage({
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <Card sx={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: 3, height: '100%' }}>
+            <Card
+              sx={{
+                backgroundColor: isDark ? '#111827' : '#ffffff',
+                border: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #e2e8f0',
+                borderRadius: 3,
+                height: '100%',
+                boxShadow: isDark ? 'none' : '0 4px 16px -2px rgba(15, 23, 42, 0.04)',
+              }}
+            >
               <CardContent sx={{ p: 3 }}>
                 <Box sx={{ color: '#f59e0b', mb: 2 }}><SecurityIcon fontSize="large" /></Box>
-                <Typography variant="h6" fontWeight="bold" sx={{ color: '#f8fafc', mb: 1 }}>
+                <Typography variant="h6" fontWeight="bold" sx={{ color: isDark ? '#f8fafc' : '#0f172a', mb: 1 }}>
                   Urgency Justification
                 </Typography>
-                <Typography variant="body2" sx={{ color: '#94a3b8', lineHeight: 1.6 }}>
+                <Typography variant="body2" sx={{ color: isDark ? '#94a3b8' : '#64748b', lineHeight: 1.6 }}>
                   Computes concrete risk levels (Urgent, High, Med, Low) with defensible business justification reasons.
                 </Typography>
               </CardContent>
@@ -686,13 +797,21 @@ export default function LandingPage({
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <Card sx={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: 3, height: '100%' }}>
+            <Card
+              sx={{
+                backgroundColor: isDark ? '#111827' : '#ffffff',
+                border: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #e2e8f0',
+                borderRadius: 3,
+                height: '100%',
+                boxShadow: isDark ? 'none' : '0 4px 16px -2px rgba(15, 23, 42, 0.04)',
+              }}
+            >
               <CardContent sx={{ p: 3 }}>
                 <Box sx={{ color: '#10b981', mb: 2 }}><HubIcon fontSize="large" /></Box>
-                <Typography variant="h6" fontWeight="bold" sx={{ color: '#f8fafc', mb: 1 }}>
+                <Typography variant="h6" fontWeight="bold" sx={{ color: isDark ? '#f8fafc' : '#0f172a', mb: 1 }}>
                   Deterministic Routing
                 </Typography>
-                <Typography variant="body2" sx={{ color: '#94a3b8', lineHeight: 1.6 }}>
+                <Typography variant="body2" sx={{ color: isDark ? '#94a3b8' : '#64748b', lineHeight: 1.6 }}>
                   Maps directly to responsible internal owners (Engineering, Finance, Sales Team, Client Success) with zero guessing.
                 </Typography>
               </CardContent>
@@ -700,13 +819,21 @@ export default function LandingPage({
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <Card sx={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: 3, height: '100%' }}>
+            <Card
+              sx={{
+                backgroundColor: isDark ? '#111827' : '#ffffff',
+                border: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #e2e8f0',
+                borderRadius: 3,
+                height: '100%',
+                boxShadow: isDark ? 'none' : '0 4px 16px -2px rgba(15, 23, 42, 0.04)',
+              }}
+            >
               <CardContent sx={{ p: 3 }}>
-                <Box sx={{ color: '#c084fc', mb: 2 }}><EmailIcon fontSize="large" /></Box>
-                <Typography variant="h6" fontWeight="bold" sx={{ color: '#f8fafc', mb: 1 }}>
+                <Box sx={{ color: '#8b5cf6', mb: 2 }}><EmailIcon fontSize="large" /></Box>
+                <Typography variant="h6" fontWeight="bold" sx={{ color: isDark ? '#f8fafc' : '#0f172a', mb: 1 }}>
                   Email Dispatch
                 </Typography>
-                <Typography variant="body2" sx={{ color: '#94a3b8', lineHeight: 1.6 }}>
+                <Typography variant="body2" sx={{ color: isDark ? '#94a3b8' : '#64748b', lineHeight: 1.6 }}>
                   Auto-drafts empathetic first replies ready to review, customize, and transmit directly via Gmail SMTP or Safe Simulation.
                 </Typography>
               </CardContent>
@@ -716,15 +843,23 @@ export default function LandingPage({
       </Container>
 
       {/* FOOTER CALL TO ACTION */}
-      <Box sx={{ borderTop: '1px solid #334155', py: 8, backgroundColor: '#0b1120', textAlign: 'center' }}>
+      <Box
+        sx={{
+          borderTop: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #e2e8f0',
+          py: 8,
+          backgroundColor: isDark ? '#070a12' : '#f1f5f9',
+          textAlign: 'center',
+          transition: 'background-color 0.3s ease',
+        }}
+      >
         <Container maxWidth="md">
-          <Typography variant="h4" fontWeight="800" sx={{ color: '#f8fafc', mb: 2 }}>
+          <Typography variant="h4" fontWeight="800" sx={{ color: isDark ? '#f8fafc' : '#0f172a', mb: 2 }}>
             Ready to streamline your client operations?
           </Typography>
-          <Typography variant="body1" sx={{ color: '#94a3b8', mb: 4 }}>
+          <Typography variant="body1" sx={{ color: isDark ? '#94a3b8' : '#64748b', mb: 4 }}>
             Sign in with the pre-configured admin account to test automated triage, Gmail dispatch, dynamic scenario generation, and webhook feeds.
           </Typography>
-          <Typography variant="caption" sx={{ display: 'block', mt: 4, color: '#64748b' }}>
+          <Typography variant="caption" sx={{ display: 'block', mt: 4, color: isDark ? '#64748b' : '#94a3b8' }}>
             © 2026 AI Request Triage Assistant • Built for Node Solutions / Stage Two Challenge
           </Typography>
         </Container>
@@ -741,12 +876,16 @@ export default function LandingPage({
         fullWidth
         PaperProps={{
           sx: {
-            backgroundColor: '#0f172a',
-            backgroundImage: 'radial-gradient(ellipse at top, rgba(124, 58, 237, 0.15), transparent 70%)',
-            border: '1px solid rgba(139, 92, 246, 0.3)',
+            backgroundColor: isDark ? '#0f172a' : '#ffffff',
+            backgroundImage: isDark
+              ? 'radial-gradient(ellipse at top, rgba(124, 58, 237, 0.15), transparent 70%)'
+              : 'none',
+            border: isDark ? '1px solid rgba(139, 92, 246, 0.3)' : '1px solid #e2e8f0',
             borderRadius: 3,
-            color: '#f8fafc',
-            boxShadow: '0 25px 60px -12px rgba(0, 0, 0, 0.7), 0 0 40px rgba(139, 92, 246, 0.2)',
+            color: isDark ? '#f8fafc' : '#0f172a',
+            boxShadow: isDark
+              ? '0 25px 60px -12px rgba(0, 0, 0, 0.7), 0 0 40px rgba(139, 92, 246, 0.2)'
+              : '0 25px 50px -12px rgba(0, 0, 0, 0.15)',
             overflow: 'hidden',
           },
         }}
@@ -755,11 +894,11 @@ export default function LandingPage({
           sx={{
             m: 0,
             p: 2.5,
-            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+            borderBottom: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #f1f5f9',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            background: 'rgba(15, 23, 42, 0.95)',
+            background: isDark ? 'rgba(15, 23, 42, 0.95)' : '#ffffff',
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
@@ -778,10 +917,10 @@ export default function LandingPage({
               <AutoAwesomeIcon sx={{ color: '#ffffff', fontSize: 22 }} />
             </Box>
             <Box>
-              <Typography variant="h6" fontWeight="800" sx={{ color: '#f8fafc', lineHeight: 1.2 }}>
+              <Typography variant="h6" fontWeight="800" sx={{ color: isDark ? '#f8fafc' : '#0f172a', lineHeight: 1.2 }}>
                 Live AI Triage Studio
               </Typography>
-              <Typography variant="caption" sx={{ color: '#94a3b8' }}>
+              <Typography variant="caption" sx={{ color: isDark ? '#94a3b8' : '#64748b' }}>
                 Test real-time intent extraction, urgency grading, and auto-draft synthesis
               </Typography>
             </Box>
@@ -792,18 +931,31 @@ export default function LandingPage({
               setStudioLoading(false);
             }}
             sx={{
-              color: '#94a3b8',
-              '&:hover': { color: '#ffffff', backgroundColor: 'rgba(255, 255, 255, 0.08)' },
+              color: isDark ? '#94a3b8' : '#64748b',
+              '&:hover': {
+                color: isDark ? '#ffffff' : '#0f172a',
+                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
+              },
             }}
           >
             <CloseIcon />
           </IconButton>
         </DialogTitle>
 
-        <DialogContent sx={{ p: 3, backgroundColor: 'rgba(15, 23, 42, 0.6)' }}>
+        <DialogContent sx={{ p: 3, backgroundColor: isDark ? 'rgba(15, 23, 42, 0.6)' : '#fafafa' }}>
           {/* Preset Selector Chips */}
           <Box sx={{ mb: 2.5 }}>
-            <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', mb: 1 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: isDark ? '#94a3b8' : '#64748b',
+                fontWeight: 600,
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                display: 'block',
+                mb: 1,
+              }}
+            >
               Select a real-world scenario preset or type below:
             </Typography>
             <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
@@ -817,13 +969,19 @@ export default function LandingPage({
                     onClick={() => handleSelectPreset(preset)}
                     variant={isSelected ? 'filled' : 'outlined'}
                     sx={{
-                      backgroundColor: isSelected ? 'rgba(139, 92, 246, 0.25)' : 'rgba(30, 41, 59, 0.5)',
-                      borderColor: isSelected ? '#a855f7' : '#334155',
-                      color: isSelected ? '#f1f5f9' : '#cbd5e1',
+                      backgroundColor: isSelected
+                        ? isDark ? 'rgba(139, 92, 246, 0.25)' : 'rgba(124, 58, 237, 0.12)'
+                        : isDark ? 'rgba(30, 41, 59, 0.5)' : '#ffffff',
+                      borderColor: isSelected
+                        ? isDark ? '#a855f7' : '#7c3aed'
+                        : isDark ? '#334155' : '#cbd5e1',
+                      color: isSelected
+                        ? isDark ? '#f1f5f9' : '#6d28d9'
+                        : isDark ? '#cbd5e1' : '#475569',
                       fontWeight: isSelected ? 700 : 500,
                       '&:hover': {
-                        backgroundColor: 'rgba(139, 92, 246, 0.35)',
-                        borderColor: '#c084fc',
+                        backgroundColor: isDark ? 'rgba(139, 92, 246, 0.35)' : 'rgba(124, 58, 237, 0.18)',
+                        borderColor: '#a855f7',
                       },
                     }}
                   />
@@ -835,10 +993,18 @@ export default function LandingPage({
           {/* Editable Inquiry Text Area */}
           <Box sx={{ mb: 2.5 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.8 }}>
-              <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: isDark ? '#94a3b8' : '#64748b',
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                }}
+              >
                 Client Inbound Message
               </Typography>
-              <Typography variant="caption" sx={{ color: '#64748b' }}>
+              <Typography variant="caption" sx={{ color: isDark ? '#64748b' : '#94a3b8' }}>
                 {studioText.length} characters
               </Typography>
             </Box>
@@ -854,16 +1020,19 @@ export default function LandingPage({
               placeholder="Paste any customer email, Zendesk ticket, chat snippet, or webhook payload..."
               sx={{
                 '& .MuiOutlinedInput-root': {
-                  backgroundColor: '#1e293b',
-                  color: '#f8fafc',
+                  backgroundColor: isDark ? '#1e293b' : '#ffffff',
+                  color: isDark ? '#f8fafc' : '#0f172a',
                   fontSize: '0.88rem',
                   lineHeight: 1.5,
                   borderRadius: 2,
-                  border: '1px solid #334155',
+                  border: isDark ? '1px solid #334155' : '1px solid #cbd5e1',
                   '& fieldset': { border: 'none' },
-                  '&:hover': { backgroundColor: '#243248' },
+                  '&:hover': {
+                    backgroundColor: isDark ? '#243248' : '#ffffff',
+                    borderColor: isDark ? '#475569' : '#94a3b8',
+                  },
                   '&.Mui-focused': {
-                    backgroundColor: '#1e293b',
+                    backgroundColor: isDark ? '#1e293b' : '#ffffff',
                     boxShadow: '0 0 0 2px #8b5cf6',
                   },
                 },
@@ -895,7 +1064,7 @@ export default function LandingPage({
               {studioLoading ? 'AI Triage In Progress...' : 'Run Instant AI Analysis ⚡'}
             </Button>
 
-            <Typography variant="caption" sx={{ color: '#64748b', fontStyle: 'italic' }}>
+            <Typography variant="caption" sx={{ color: isDark ? '#64748b' : '#94a3b8', fontStyle: 'italic' }}>
               ⚡ Powered by LangGraph State Machine & Gemini
             </Typography>
           </Box>
@@ -907,12 +1076,12 @@ export default function LandingPage({
               sx={{
                 p: 2,
                 mb: 3,
-                backgroundColor: 'rgba(30, 41, 59, 0.6)',
-                border: '1px solid rgba(139, 92, 246, 0.3)',
+                backgroundColor: isDark ? 'rgba(30, 41, 59, 0.6)' : '#ffffff',
+                border: isDark ? '1px solid rgba(139, 92, 246, 0.3)' : '1px solid #e2e8f0',
                 borderRadius: 2,
               }}
             >
-              <Typography variant="caption" sx={{ color: '#c084fc', fontWeight: 700, display: 'block', mb: 1.5 }}>
+              <Typography variant="caption" sx={{ color: '#8b5cf6', fontWeight: 700, display: 'block', mb: 1.5 }}>
                 LANGGRAPH PIPELINE EXECUTION:
               </Typography>
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} justifyContent="space-between">
@@ -930,7 +1099,7 @@ export default function LandingPage({
                         display: 'flex',
                         alignItems: 'center',
                         gap: 1,
-                        color: isActive ? '#a855f7' : '#64748b',
+                        color: isActive ? '#8b5cf6' : (isDark ? '#64748b' : '#94a3b8'),
                         fontSize: '0.78rem',
                         fontWeight: isActive ? 700 : 400,
                       }}
@@ -938,7 +1107,7 @@ export default function LandingPage({
                       {isActive ? (
                         <CheckCircleIcon sx={{ fontSize: 16, color: '#10b981' }} />
                       ) : (
-                        <CircularProgress size={12} sx={{ color: '#64748b' }} />
+                        <CircularProgress size={12} sx={{ color: isDark ? '#64748b' : '#94a3b8' }} />
                       )}
                       <span>{item.label}</span>
                     </Box>
@@ -954,9 +1123,10 @@ export default function LandingPage({
               elevation={0}
               sx={{
                 p: 2.5,
-                backgroundColor: '#1e293b',
-                border: '1px solid #334155',
+                backgroundColor: isDark ? '#1e293b' : '#ffffff',
+                border: isDark ? '1px solid #334155' : '1px solid #e2e8f0',
                 borderRadius: 2.5,
+                boxShadow: isDark ? 'none' : '0 4px 16px -2px rgba(0, 0, 0, 0.05)',
               }}
             >
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center', mb: 2 }}>
@@ -978,7 +1148,11 @@ export default function LandingPage({
                   size="small"
                   label={`Category: ${studioResult.category || 'General Inquiry'}`}
                   variant="outlined"
-                  sx={{ borderColor: '#475569', color: '#e2e8f0' }}
+                  sx={{
+                    borderColor: isDark ? '#475569' : '#cbd5e1',
+                    color: isDark ? '#e2e8f0' : '#334155',
+                    backgroundColor: isDark ? 'transparent' : '#ffffff',
+                  }}
                 />
                 <Chip
                   size="small"
@@ -998,13 +1172,13 @@ export default function LandingPage({
                 />
               </Box>
 
-              <Typography variant="body2" sx={{ color: '#f8fafc', mb: 1, lineHeight: 1.5 }}>
-                <strong style={{ color: '#94a3b8' }}>Summary: </strong>
+              <Typography variant="body2" sx={{ color: isDark ? '#f8fafc' : '#0f172a', mb: 1, lineHeight: 1.5 }}>
+                <strong style={{ color: isDark ? '#94a3b8' : '#64748b' }}>Summary: </strong>
                 {studioResult.summary}
               </Typography>
 
               {studioResult.priority_reason && (
-                <Typography variant="caption" sx={{ color: '#94a3b8', display: 'block', mb: 2, fontStyle: 'italic' }}>
+                <Typography variant="caption" sx={{ color: isDark ? '#94a3b8' : '#64748b', display: 'block', mb: 2, fontStyle: 'italic' }}>
                   <strong>Risk Factor: </strong> {studioResult.priority_reason}
                 </Typography>
               )}
@@ -1013,14 +1187,14 @@ export default function LandingPage({
               <Box
                 sx={{
                   p: 2,
-                  backgroundColor: 'rgba(15, 23, 42, 0.8)',
+                  backgroundColor: isDark ? 'rgba(15, 23, 42, 0.8)' : '#f8fafc',
                   borderRadius: 2,
-                  border: '1px solid #334155',
+                  border: isDark ? '1px solid #334155' : '1px solid #e2e8f0',
                   position: 'relative',
                 }}
               >
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                  <Typography variant="caption" sx={{ color: '#60a5fa', fontWeight: 700, textTransform: 'uppercase' }}>
+                  <Typography variant="caption" sx={{ color: '#3b82f6', fontWeight: 700, textTransform: 'uppercase' }}>
                     ✦ AI Auto-Drafted Empathetic Response
                   </Typography>
                   <Button
@@ -1028,20 +1202,31 @@ export default function LandingPage({
                     startIcon={copiedDraft ? <DoneIcon fontSize="small" sx={{ color: '#10b981' }} /> : <ContentCopyIcon fontSize="small" />}
                     onClick={() => handleCopyDraft(studioResult.draft_response || studioResult.draftSnippet)}
                     sx={{
-                      color: copiedDraft ? '#10b981' : '#94a3b8',
+                      color: copiedDraft ? '#10b981' : (isDark ? '#94a3b8' : '#64748b'),
                       fontSize: '0.75rem',
                       textTransform: 'none',
                       py: 0.2,
                       px: 1,
-                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.04)',
                       borderRadius: 1,
-                      '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.1)', color: '#fff' },
+                      '&:hover': {
+                        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+                        color: isDark ? '#fff' : '#0f172a',
+                      },
                     }}
                   >
                     {copiedDraft ? 'Copied to Clipboard!' : 'Copy Draft'}
                   </Button>
                 </Box>
-                <Typography variant="body2" sx={{ color: '#cbd5e1', fontStyle: 'normal', lineHeight: 1.6, fontSize: '0.86rem' }}>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: isDark ? '#cbd5e1' : '#334155',
+                    fontStyle: 'normal',
+                    lineHeight: 1.6,
+                    fontSize: '0.86rem',
+                  }}
+                >
                   "{studioResult.draft_response || studioResult.draftSnippet}"
                 </Typography>
               </Box>
@@ -1053,8 +1238,8 @@ export default function LandingPage({
             sx={{
               mt: 3,
               p: 2,
-              backgroundColor: 'rgba(59, 130, 246, 0.08)',
-              border: '1px solid rgba(59, 130, 246, 0.25)',
+              backgroundColor: isDark ? 'rgba(59, 130, 246, 0.08)' : 'rgba(37, 99, 235, 0.06)',
+              border: isDark ? '1px solid rgba(59, 130, 246, 0.25)' : '1px solid rgba(37, 99, 235, 0.2)',
               borderRadius: 2,
               display: 'flex',
               flexDirection: { xs: 'column', sm: 'row' },
@@ -1064,10 +1249,10 @@ export default function LandingPage({
             }}
           >
             <Box>
-              <Typography variant="subtitle2" fontWeight="700" sx={{ color: '#f8fafc' }}>
+              <Typography variant="subtitle2" fontWeight="700" sx={{ color: isDark ? '#f8fafc' : '#0f172a' }}>
                 Want to dispatch responses directly via Gmail & track tickets live?
               </Typography>
-              <Typography variant="caption" sx={{ color: '#94a3b8' }}>
+              <Typography variant="caption" sx={{ color: isDark ? '#94a3b8' : '#64748b' }}>
                 Access the full dashboard with bulk webhook simulator, manual override controls, and audit trails.
               </Typography>
             </Box>
@@ -1095,4 +1280,3 @@ export default function LandingPage({
     </Box>
   );
 }
-

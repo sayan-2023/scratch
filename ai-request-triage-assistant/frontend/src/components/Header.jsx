@@ -22,6 +22,9 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
 
+import ThemeToggle from './ThemeToggle';
+import { useColorMode } from '../ThemeContext';
+
 export default function Header({
   onOpenKeyModal,
   hasApiKey,
@@ -36,14 +39,18 @@ export default function Header({
   onLogout,
   onNavigateHome,
 }) {
+  const { isDark } = useColorMode();
+
   return (
     <AppBar
       position="static"
       color="default"
       elevation={0}
       sx={{
-        borderBottom: '1px solid #e2e8f0',
-        backgroundColor: '#ffffff',
+        borderBottom: '1px solid',
+        borderColor: 'divider',
+        backgroundColor: 'background.paper',
+        transition: 'background-color 0.3s ease, border-color 0.3s ease',
       }}
     >
       <Toolbar sx={{ justifyContent: 'space-between', py: 1 }}>
@@ -58,6 +65,11 @@ export default function Header({
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(37, 99, 235, 0.25)',
+              transition: 'transform 0.2s ease',
+              '&:hover': {
+                transform: 'scale(1.05)',
+              },
             }}
             onClick={onNavigateHome}
           >
@@ -93,7 +105,12 @@ export default function Header({
                 size="small"
                 startIcon={<HomeOutlinedIcon />}
                 onClick={onNavigateHome}
-                sx={{ borderRadius: 2, textTransform: 'none', color: '#64748b' }}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  color: 'text.secondary',
+                  '&:hover': { color: 'text.primary' },
+                }}
               >
                 Home
               </Button>
@@ -123,7 +140,11 @@ export default function Header({
             size="small"
             startIcon={emailAccountsCount > 0 ? <MarkEmailReadIcon /> : <MailOutlineIcon />}
             onClick={onOpenEmailModal}
-            sx={{ borderRadius: 2 }}
+            sx={{
+              borderRadius: 2,
+              borderColor: emailAccountsCount > 0 ? 'divider' : undefined,
+              color: emailAccountsCount > 0 ? 'text.primary' : undefined,
+            }}
           >
             {emailAccountsCount > 0
               ? `${emailAccountsCount} Gmail`
@@ -137,12 +158,19 @@ export default function Header({
             size="small"
             startIcon={<KeyIcon />}
             onClick={onOpenKeyModal}
-            sx={{ borderRadius: 2 }}
+            sx={{
+              borderRadius: 2,
+              borderColor: hasApiKey ? 'divider' : undefined,
+              color: hasApiKey ? 'text.primary' : undefined,
+            }}
           >
             {hasApiKey ? 'API Key' : 'Set Key'}
           </Button>
 
-          <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
+          {/* Theme Toggle (Inside Workspace) */}
+          <ThemeToggle size="small" />
+
+          <Divider orientation="vertical" flexItem sx={{ mx: 0.5, borderColor: 'divider' }} />
 
           {/* User Account & Profile */}
           {currentUser ? (
@@ -152,7 +180,9 @@ export default function Header({
                   avatar={<Avatar src={currentUser.avatar_url}>{currentUser.name[0]}</Avatar>}
                   label={
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.6 }}>
-                      <span>{currentUser.name}</span>
+                      <Typography variant="body2" fontWeight="600" color="text.primary" component="span">
+                        {currentUser.name}
+                      </Typography>
                       {currentUser.role === 'Admin' && (
                         <Typography
                           component="span"
@@ -173,7 +203,7 @@ export default function Header({
                     </Box>
                   }
                   variant="outlined"
-                  sx={{ borderColor: '#cbd5e1' }}
+                  sx={{ borderColor: 'divider' }}
                 />
               </Tooltip>
 

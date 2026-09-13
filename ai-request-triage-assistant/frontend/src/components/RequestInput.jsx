@@ -22,6 +22,7 @@ import {
   Tooltip,
   Paper,
   Divider,
+  useTheme,
 } from '@mui/material';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import ClearIcon from '@mui/icons-material/Clear';
@@ -47,6 +48,8 @@ export default function RequestInput({
   onOpenKeyModal,
   onSaveAsPreset,
 }) {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
   const isSubmitDisabled = loading || !requestText.trim() || requestText.trim().length < 5;
 
   // Preset modal state
@@ -153,12 +156,18 @@ export default function RequestInput({
       sx={{
         mb: 3,
         borderRadius: 3,
-        border: '1px solid #e2e8f0',
-        boxShadow: '0 4px 20px -2px rgba(15, 23, 42, 0.04)',
+        border: '1px solid',
+        borderColor: 'divider',
+        backgroundColor: 'background.paper',
+        boxShadow: isDark
+          ? '0 4px 20px -2px rgba(0, 0, 0, 0.5)'
+          : '0 4px 20px -2px rgba(15, 23, 42, 0.04)',
         overflow: 'hidden',
         transition: 'all 0.2s ease',
         '&:hover': {
-          boxShadow: '0 6px 24px -2px rgba(15, 23, 42, 0.08)',
+          boxShadow: isDark
+            ? '0 6px 24px -2px rgba(0, 0, 0, 0.6)'
+            : '0 6px 24px -2px rgba(15, 23, 42, 0.08)',
         },
       }}
     >
@@ -167,8 +176,9 @@ export default function RequestInput({
         sx={{
           px: 3,
           py: 2,
-          backgroundColor: '#fafafa',
-          borderBottom: '1px solid #f1f5f9',
+          backgroundColor: isDark ? 'rgba(255, 255, 255, 0.02)' : '#fafafa',
+          borderBottom: '1px solid',
+          borderColor: 'divider',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -192,10 +202,10 @@ export default function RequestInput({
             <PsychologyIcon fontSize="small" />
           </Box>
           <Box>
-            <Typography variant="subtitle1" fontWeight="800" sx={{ color: '#0f172a', lineHeight: 1.2 }}>
+            <Typography variant="subtitle1" fontWeight="800" sx={{ color: 'text.primary', lineHeight: 1.2 }}>
               Incoming Client Request
             </Typography>
-            <Typography variant="caption" sx={{ color: '#64748b' }}>
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
               Raw unstructured email, support ticket, or webhook payload
             </Typography>
           </Box>
@@ -207,13 +217,24 @@ export default function RequestInput({
               size="small"
               icon={<ForumIcon fontSize="small" />}
               label={activeSample.channel}
-              sx={{ backgroundColor: '#f1f5f9', color: '#475569', fontWeight: 600, fontSize: '0.75rem' }}
+              sx={{
+                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.06)' : '#f1f5f9',
+                color: 'text.secondary',
+                fontWeight: 600,
+                fontSize: '0.75rem',
+              }}
             />
             <Chip
               size="small"
               icon={<AlternateEmailIcon fontSize="small" />}
               label={activeSample.sender}
-              sx={{ backgroundColor: '#f8fafc', borderColor: '#cbd5e1', color: '#334155', fontWeight: 600, fontSize: '0.75rem' }}
+              sx={{
+                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : '#f8fafc',
+                borderColor: 'divider',
+                color: 'text.primary',
+                fontWeight: 600,
+                fontSize: '0.75rem',
+              }}
               variant="outlined"
             />
           </Stack>
@@ -233,13 +254,13 @@ export default function RequestInput({
           sx={{
             '& .MuiOutlinedInput-root': {
               borderRadius: 2.5,
-              backgroundColor: '#ffffff',
+              backgroundColor: isDark ? '#0b0f19' : '#ffffff',
               fontSize: '0.92rem',
               lineHeight: 1.6,
-              color: '#1e293b',
+              color: 'text.primary',
               transition: 'border-color 0.2s',
-              '& fieldset': { borderColor: '#cbd5e1' },
-              '&:hover fieldset': { borderColor: '#94a3b8' },
+              '& fieldset': { borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : '#cbd5e1' },
+              '&:hover fieldset': { borderColor: isDark ? 'rgba(255, 255, 255, 0.25)' : '#94a3b8' },
               '&.Mui-focused fieldset': { borderColor: '#7c3aed', borderWidth: 2 },
             },
           }}
@@ -343,8 +364,9 @@ export default function RequestInput({
             sx={{
               mt: 2.5,
               p: 2,
-              backgroundColor: '#f8fafc',
-              border: '1px solid #e2e8f0',
+              backgroundColor: isDark ? '#0b0f19' : '#f8fafc',
+              border: '1px solid',
+              borderColor: 'divider',
               borderRadius: 2.5,
             }}
           >
@@ -369,7 +391,7 @@ export default function RequestInput({
                       display: 'flex',
                       alignItems: 'center',
                       gap: 0.8,
-                      color: isActive ? '#7c3aed' : '#94a3b8',
+                      color: isActive ? '#7c3aed' : (isDark ? '#64748b' : '#94a3b8'),
                       fontSize: '0.78rem',
                       fontWeight: isActive ? 700 : 500,
                     }}
@@ -377,7 +399,7 @@ export default function RequestInput({
                     {isActive ? (
                       <CheckCircleIcon sx={{ fontSize: 16, color: '#10b981' }} />
                     ) : (
-                      <Box sx={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid #cbd5e1' }} />
+                      <Box sx={{ width: 14, height: 14, borderRadius: '50%', border: isDark ? '2px solid #334155' : '2px solid #cbd5e1' }} />
                     )}
                     <span>{item.label}</span>
                   </Box>
@@ -387,7 +409,7 @@ export default function RequestInput({
           </Paper>
         )}
 
-        <Divider sx={{ my: 2.5 }} />
+        <Divider sx={{ my: 2.5, borderColor: 'divider' }} />
 
         {/* Action Controls */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1.5 }}>
@@ -400,7 +422,7 @@ export default function RequestInput({
                 disabled={loading}
                 startIcon={<BookmarkAddIcon fontSize="small" />}
                 size="small"
-                sx={{ borderRadius: 2, textTransform: 'none', color: '#475569', borderColor: '#cbd5e1' }}
+                sx={{ borderRadius: 2, textTransform: 'none', color: 'text.secondary', borderColor: 'divider' }}
               >
                 Save as Preset
               </Button>
@@ -414,7 +436,7 @@ export default function RequestInput({
                 disabled={loading}
                 startIcon={<ClearIcon fontSize="small" />}
                 size="small"
-                sx={{ borderRadius: 2, textTransform: 'none', color: '#64748b' }}
+                sx={{ borderRadius: 2, textTransform: 'none', color: 'text.secondary' }}
               >
                 Clear
               </Button>
@@ -480,14 +502,14 @@ export default function RequestInput({
 
               {enhancedResult.bullet_points && enhancedResult.bullet_points.length > 0 && (
                 <Box>
-                  <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 700, textTransform: 'uppercase', display: 'block', mb: 1 }}>
+                  <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, textTransform: 'uppercase', display: 'block', mb: 1 }}>
                     Key Operational Incident Points:
                   </Typography>
                   <Stack spacing={0.8}>
                     {enhancedResult.bullet_points.map((pt, idx) => (
                       <Box key={idx} sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
                         <Box sx={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: '#7c3aed', mt: 0.8 }} />
-                        <Typography variant="body2" sx={{ color: '#334155' }}>
+                        <Typography variant="body2" sx={{ color: 'text.primary' }}>
                           {pt}
                         </Typography>
                       </Box>
@@ -497,18 +519,19 @@ export default function RequestInput({
               )}
 
               <Box>
-                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 700, textTransform: 'uppercase', display: 'block', mb: 1 }}>
+                <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, textTransform: 'uppercase', display: 'block', mb: 1 }}>
                   Polished & Structured Replacement:
                 </Typography>
                 <Paper
                   elevation={0}
                   sx={{
                     p: 2,
-                    backgroundColor: '#f8fafc',
-                    border: '1px solid #e2e8f0',
+                    backgroundColor: isDark ? '#0b0f19' : '#f8fafc',
+                    border: '1px solid',
+                    borderColor: 'divider',
                     borderRadius: 2,
                     fontSize: '0.88rem',
-                    color: '#0f172a',
+                    color: 'text.primary',
                     lineHeight: 1.6,
                     whiteSpace: 'pre-wrap',
                   }}

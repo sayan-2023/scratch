@@ -198,15 +198,22 @@ export default function EmailSettingsModal({
         />
       </DialogTitle>
 
-      <DialogContent dividers sx={{ backgroundColor: '#f8fafc' }}>
+      <DialogContent
+        dividers
+        sx={{
+          backgroundColor: (theme) =>
+            theme.palette.mode === 'dark' ? 'background.default' : '#f8fafc',
+        }}
+      >
         {/* Helper Instructions Box */}
         <Paper
           elevation={0}
           sx={{
             p: 2,
             mb: 3,
-            backgroundColor: '#ffffff',
-            border: '1px solid #e2e8f0',
+            backgroundColor: 'background.paper',
+            border: '1px solid',
+            borderColor: 'divider',
             borderRadius: 2,
           }}
         >
@@ -241,8 +248,10 @@ export default function EmailSettingsModal({
                 elevation={0}
                 sx={{
                   p: 2.5,
-                  backgroundColor: '#ffffff',
-                  border: account.is_default ? '2px solid #2563eb' : '1px solid #e2e8f0',
+                  backgroundColor: 'background.paper',
+                  border: '1px solid',
+                  borderColor: account.is_default ? 'primary.main' : 'divider',
+                  boxShadow: account.is_default ? '0 0 0 1px #3b82f6' : 'none',
                   borderRadius: 2,
                   position: 'relative',
                 }}
@@ -338,7 +347,17 @@ export default function EmailSettingsModal({
                 </Box>
 
                 {/* Connection Test Action */}
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 2, pt: 1.5, borderTop: '1px dashed #e2e8f0' }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    mt: 2,
+                    pt: 1.5,
+                    borderTop: '1px dashed',
+                    borderColor: 'divider',
+                  }}
+                >
                   <Typography variant="caption" color="text.secondary">
                     {account.department === 'Default'
                       ? 'Used for general inquiries or fallback'

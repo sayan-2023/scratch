@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: ai-request-triage-assistant
+    name: nova-ai-triage-sayan
     runtime: docker
     plan: free
     region: oregon
@@ -12,3 +12,4 @@ services:
         sync: false
       - key: PORT
         value: 8000
+

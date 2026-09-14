@@ -28,8 +28,8 @@ The application is containerized with a **multi-stage production Dockerfile**:
 2. Select **Build and deploy from a Git repository** and click **Next**.
 3. Choose your repository: `sayan-2023/scratch` (or click *Configure account* to grant access if not listed).
 4. Configure the service settings:
-   - **Name**: `ai-request-triage-assistant` (or your preferred name)
-   - **Region**: Choose the closest region (e.g. *Oregon, US* or *Frankfurt, EU*)
+   - **Name**: `nova-ai-triage-sayan` *(Important: subdomains on onrender.com are globally unique worldwide. Using `nova-ai-triage-sayan` guarantees your dedicated URL)*
+   - **Region**: Choose your closest region (e.g. *Frankfurt, EU* or *Oregon, US*)
    - **Branch**: `main`
    - **Runtime**: **Docker**
    - **Dockerfile Path**: `./Dockerfile` (Render detects this automatically)
@@ -51,11 +51,11 @@ Under the **Environment Variables** section on Render, add:
 
 ### Step 4: Click "Create Web Service"
 * Render will clone your GitHub repo, execute the Docker build, compile the React UI, and launch FastAPI.
-* In ~2-3 minutes, your service will be live at:
+* In ~2-3 minutes, your dedicated service will be live at:
   ```text
-  https://ai-request-triage-assistant.onrender.com
+  https://nova-ai-triage-sayan.onrender.com
   ```
-* **Health Check Endpoint**: `https://ai-request-triage-assistant.onrender.com/health`
+* **Health Check Endpoint**: `https://nova-ai-triage-sayan.onrender.com/health`
 
 ---
 
@@ -96,3 +96,4 @@ docker run -p 8000:8000 -e GEMINI_API_KEY="your_api_key" ai-request-triage
 # 3. Access in browser
 open http://localhost:8000
 ```
+

@@ -3,6 +3,8 @@ import logging
 from typing import List
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 
 import uuid
@@ -886,8 +888,56 @@ def correct_speech_query_endpoint(payload: SpeechCorrectionRequest):
 
 
 
+# ==============================================================================
+# Production Static SPA Frontend Serving
+# ==============================================================================
+
+_candidate_dist_paths = [
+    Path(__file__).resolve().parent.parent.parent / "frontend" / "dist",
+    Path("/app/frontend/dist"),
+    Path(__file__).resolve().parent.parent / "dist",
+]
+
+_frontend_dist = next((p for p in _candidate_dist_paths if p.is_dir()), None)
+
+if _frontend_dist:
+    logger.info(f"Mounting production frontend build from: {_frontend_dist}")
+    _assets_dir = _frontend_dist / "assets"
+    if _assets_dir.is_dir():
+        app.mount("/assets", StaticFiles(directory=str(_assets_dir)), name="assets")
+
+    @app.get("/oauth-google.html", include_in_schema=False)
+    def serve_oauth_popup():
+        popup_file = _frontend_dist / "oauth-google.html"
+        if popup_file.is_file():
+            return FileResponse(popup_file)
+        raise HTTPException(status_code=404, detail="OAuth popup template not found")
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    def serve_spa(full_path: str):
+        if (
+            full_path.startswith("api/")
+            or full_path.startswith("docs")
+            or full_path.startswith("openapi.json")
+            or full_path == "health"
+        ):
+            raise HTTPException(status_code=404, detail="Endpoint not found")
+
+        target_file = _frontend_dist / full_path
+        if target_file.is_file():
+            return FileResponse(target_file)
+
+        index_file = _frontend_dist / "index.html"
+        if index_file.is_file():
+            return FileResponse(index_file)
+
+        raise HTTPException(status_code=404, detail="Frontend index.html not found")
+
+
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
+
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run("app.main:app", host="0.0.0.0", port=port, reload=False)
 
 

@@ -51,3 +51,4 @@ EXPOSE 8000
 
 # Start FastAPI with uvicorn listening on the cloud provider's assigned $PORT
 CMD ["sh", "-c", "python -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+

@@ -24,3 +24,4 @@ def test_spa_static_serving_oauth_popup():
     res = client.get("/oauth-google.html")
     assert res.status_code == 200
     assert "Google" in res.text or "oauth" in res.text.lower()
+

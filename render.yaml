@@ -1,7 +1,7 @@
 services:
   - type: web
     name: nova-ai-triage-sayan
-    runtime: docker
+    env: docker
     plan: free
     region: oregon
     dockerfilePath: ./Dockerfile

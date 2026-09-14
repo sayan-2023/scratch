@@ -59,6 +59,7 @@ import ScrollReveal from './ScrollReveal';
 import AnimatedRobotCompanion from './AnimatedRobotCompanion';
 import MultimodalRagChatModal from './MultimodalRagChatModal';
 import InteractiveAppExplainer from './InteractiveAppExplainer';
+import NovaQuantumCommandDeck from './NovaQuantumCommandDeck';
 import { useColorMode } from '../ThemeContext';
 
 const WEBHOOK_PRESETS = [
@@ -2684,42 +2685,12 @@ export default function LandingPage({
               />
             </Box>
 
-            {/* Central Launch CTA */}
-            <Box sx={{ textAlign: 'center' }}>
-              <Button
-                variant="contained"
-                size="large"
-                onClick={handleOpenRagChat}
-                sx={{
-                  px: 4.5,
-                  py: 1.8,
-                  borderRadius: 3,
-                  fontSize: '1.05rem',
-                  fontWeight: 800,
-                  textTransform: 'none',
-                  background: 'linear-gradient(135deg, #ec4899 0%, #8b5cf6 50%, #3b82f6 100%)',
-                  boxShadow: '0 8px 30px rgba(139, 92, 246, 0.5)',
-                  transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                  '&:hover': {
-                    transform: 'translateY(-2px) scale(1.03)',
-                    boxShadow: '0 12px 40px rgba(236, 72, 153, 0.65)',
-                  },
-                }}
-              >
-                🤖 Launch Nova Multimodal Chatbot →
-              </Button>
-              <Typography
-                variant="caption"
-                sx={{
-                  display: 'block',
-                  mt: 1.5,
-                  color: isDark ? '#64748b' : '#94a3b8',
-                  fontSize: '0.78rem',
-                }}
-              >
-                Or click the floating robot companion at the bottom-right of your screen anytime
-              </Typography>
-            </Box>
+            {/* NOVA QUANTUM NEURAL COMMAND DECK */}
+            <NovaQuantumCommandDeck
+              onEngageNova={handleOpenRagChat}
+              onLaunchWorkspace={onLaunchWorkspace}
+              apiKey={apiKey}
+            />
           </ScrollReveal>
         </Container>
       </Box>

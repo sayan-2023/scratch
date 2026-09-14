@@ -41,6 +41,8 @@ from app.models import (
     EnhanceTextOutput,
     ToneDraftInput,
     ToneDraftOutput,
+    SwarmOrchestrateInput,
+    SwarmOrchestrateOutput,
     MultimodalChatRequest,
     MultimodalChatResponse,
     KnowledgeBaseDocument,
@@ -71,6 +73,7 @@ from app.agent import (
     generate_dynamic_scenario,
     enhance_and_anonymize_text,
     generate_tone_draft,
+    orchestrate_swarm,
 )
 from app.email_service import (
     send_email_message,
@@ -428,6 +431,36 @@ def tone_draft_endpoint(payload: ToneDraftInput):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to generate tone draft: {exc}"
+        )
+
+
+@app.post("/api/ai/swarm-orchestrate", response_model=SwarmOrchestrateOutput, tags=["AI Capabilities"])
+def swarm_orchestrate_endpoint(payload: SwarmOrchestrateInput):
+    """
+    Nova Autonomous Multi-Agent Swarm Orchestrator:
+    Executes collaborative 4-agent LangGraph workflow with Gemini GenAI:
+    1. Triage & Categorization Engine (Urgency, Sentiment, Churn Risk)
+    2. Security & PII Sanitizer (Scans credentials, tokens, PII)
+    3. LangGraph Cognitive Router (Department dispatch & SLA timeline)
+    4. Gemini 2.5 Multi-Agent Synthesis (Executive tailored resolution drafting)
+    """
+    if not payload.text or len(payload.text.strip()) < 5:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Incident or inquiry text must be at least 5 characters long."
+        )
+
+    try:
+        return orchestrate_swarm(
+            text=payload.text.strip(),
+            scenario_title=payload.scenario_title,
+            api_key=payload.api_key.strip() if payload.api_key else None,
+        )
+    except Exception as exc:
+        logger.error(f"Error in swarm_orchestrate_endpoint: {exc}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Swarm orchestration failed: {exc}"
         )
 
 

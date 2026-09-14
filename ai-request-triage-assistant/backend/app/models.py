@@ -121,6 +121,40 @@ class ToneDraftOutput(BaseModel):
     draft: str
 
 
+class SwarmAgentTrace(BaseModel):
+    step: int
+    agent_name: str
+    status: str
+    thought: str
+    output: Dict[str, Any] = Field(default_factory=dict)
+
+
+class SwarmOrchestrateInput(BaseModel):
+    text: str = Field(..., min_length=5, description="Raw input text or incident scenario")
+    scenario_title: Optional[str] = Field(default=None, description="Optional preset title or tag")
+    api_key: Optional[str] = Field(default=None, description="Optional Google Gemini API key")
+
+
+class SwarmOrchestrateOutput(BaseModel):
+    priority: str
+    urgency_score: int
+    category: str
+    department: str
+    sla: str
+    summary: str
+    draft_response: str
+    sentiment_label: str = "Neutral"
+    sentiment_score: float = 0.0
+    churn_risk: str = "Low"
+    key_entities: List[str] = Field(default_factory=list)
+    redacted_items_count: int = 0
+    sanitized_text: str = ""
+    agent_traces: List[SwarmAgentTrace] = Field(default_factory=list)
+    execution_time_ms: float = 0.0
+    tokens_used: int = 0
+    confidence: float = 98.5
+
+
 class SampleRequest(BaseModel):
     """A pre-configured mock client message for easy 1-click testing."""
     id: str
